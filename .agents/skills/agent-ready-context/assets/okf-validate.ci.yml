@@ -1,0 +1,24 @@
+# OKF validation gate — GitHub Actions template.
+# Install (consent-first) by copying to .github/workflows/okf-validate.yml
+# in the target repository; adapt the single `uv run` step for other CI providers.
+#
+# Zero-LLM by design: the validator needs no API key and sends nothing anywhere,
+# and it exits nonzero on structural violations, so it can gate merges.
+# `openkb lint` is deliberately NOT run here: it is an LLM-backed health report
+# that always completes without failing the build — run it locally instead.
+#
+# Action refs use major-version tags; pin them to full commit SHAs if the
+# target organization's policy requires it.
+name: okf-validate
+on:
+  pull_request:
+    paths:
+      - "okf/**"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Validate OKF bundle (structural, zero-LLM)
+        run: uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki

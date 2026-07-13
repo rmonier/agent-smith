@@ -1,0 +1,626 @@
+{
+  "411c40abce4c8b4eebcebc294fad446d3d69fd442c1a3772641882bd3057eee6": {
+    "name": ".agents__skills__agent-ready-context__assets__external-docs.example.txt.md",
+    "doc_name": "agents__skills__agent-ready-context__assets__external-docs-example-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__assets__external-docs.example.txt.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__assets__external-docs-example-txt.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__assets__external-docs-example-txt.md"
+  },
+  "537a7c242d15b34ba264078606d7e52846ad04ab1f58121c72dca4fdd6b9d10e": {
+    "name": ".agents__skills__agent-ready-context__assets__gitattributes.template.md",
+    "doc_name": "agents__skills__agent-ready-context__assets__gitattributes-template",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__assets__gitattributes.template.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__assets__gitattributes-template.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__assets__gitattributes-template.md"
+  },
+  "ce8967bc4d5b88a17ee6ce04cb6d51a0eaacc8b8044938d0dfa066457c29a982": {
+    "name": ".agents__skills__agent-ready-context__assets__okf-validate.ci.yml.md",
+    "doc_name": "agents__skills__agent-ready-context__assets__okf-validate-ci-yml",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__assets__okf-validate.ci.yml.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__assets__okf-validate-ci-yml.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__assets__okf-validate-ci-yml.md"
+  },
+  "d09f94b498f945349cc64b17f505f088a23ae640fb3fc8c56e620c560c1bfd21": {
+    "name": ".agents__skills__agent-ready-context__references__official-okf-spec-web-check.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__official-okf-spec-web-check-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__official-okf-spec-web-check.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__official-okf-spec-web-check-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__official-okf-spec-web-check-md.md"
+  },
+  "5dce796df30576ca8ddb21efa473951494609cb1e3d72b6ca2c52ed6c29828e9": {
+    "name": ".agents__skills__skill-creator__assets__skill-lock.example.json.md",
+    "doc_name": "agents__skills__skill-creator__assets__skill-lock-example-json",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__assets__skill-lock.example.json.md",
+    "raw_path": "raw/agents__skills__skill-creator__assets__skill-lock-example-json.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__assets__skill-lock-example-json.md"
+  },
+  "2297cd6e58cd344b760f749c5b1764655fa9055491ae16dd5986a678016fc916": {
+    "name": ".agents__skills__skill-creator__assets__skill-template.md.md",
+    "doc_name": "agents__skills__skill-creator__assets__skill-template-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__assets__skill-template.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__assets__skill-template-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__assets__skill-template-md.md"
+  },
+  "b383029d89d4cd62ccdf49bad0c7df65cfc308519fbb3095e4c4874f490ef8fc": {
+    "name": ".agents__skills__skill-creator__references__action-vs-context.md.md",
+    "doc_name": "agents__skills__skill-creator__references__action-vs-context-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__references__action-vs-context.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__references__action-vs-context-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__references__action-vs-context-md.md"
+  },
+  "a096f181d85f2a31c736177010a628b299cd889c5e75164183eff839dfc4e950": {
+    "name": ".agents__skills__skill-creator__references__source-attribution.md.md",
+    "doc_name": "agents__skills__skill-creator__references__source-attribution-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__references__source-attribution.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__references__source-attribution-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__references__source-attribution-md.md"
+  },
+  "2f2b6d78c40ac35be96511da8486b0e5bf218d9eb413871b2ae9b5e2593445f8": {
+    "name": ".agents__skills__skill-creator__references__testing-skills.md.md",
+    "doc_name": "agents__skills__skill-creator__references__testing-skills-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__references__testing-skills.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__references__testing-skills-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__references__testing-skills-md.md"
+  },
+  "435f5895c98f1c75f0ffc52725d8ba447adce75b085e444077fd978ddcf296dd": {
+    "name": ".agents__skills__skill-creator__references__vendor-skill-management.md.md",
+    "doc_name": "agents__skills__skill-creator__references__vendor-skill-management-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__references__vendor-skill-management.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__references__vendor-skill-management-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__references__vendor-skill-management-md.md"
+  },
+  "9c435739d34972f5a68e4d4d5fc26ed7c863cd5e67995f19d5b219bc2b5dd7a7": {
+    "name": ".agents__skills__subagent-profile-adapter__assets__profile-intents.example.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__assets__profile-intents-example-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__assets__profile-intents.example.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__assets__profile-intents-example-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__assets__profile-intents-example-md.md"
+  },
+  "48e73c76410530df6b280ce062e88872851c50b4d74d23c8faee7b166941de25": {
+    "name": ".agents__skills__subagent-profile-adapter__references__harness-docs.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__references__harness-docs-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__references__harness-docs.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__references__harness-docs-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__references__harness-docs-md.md"
+  },
+  "6ca82007363b38c4026e37b8a6ece91c65a181c6b86105789b14e04cedf8e231": {
+    "name": ".agents__skills__subagent-profile-adapter__references__profile-authoring.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__references__profile-authoring-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__references__profile-authoring.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__references__profile-authoring-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__references__profile-authoring-md.md"
+  },
+  "6331b3d906d16edf3863f0969bf465205181d2bae1eb24bb2c72a8cb12013af6": {
+    "name": ".agents__skills__subagent-profile-adapter__references__runtime-detection.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__references__runtime-detection-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__references__runtime-detection.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__references__runtime-detection-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__references__runtime-detection-md.md"
+  },
+  "a01311808fcad2089bc9004173bce7907768250e0e2280fcd0b105a84f7e35d5": {
+    "name": ".agents__skills__agent-ready-context__assets__graphifyignore.template.md",
+    "doc_name": "agents__skills__agent-ready-context__assets__graphifyignore-template",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__assets__graphifyignore.template.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__assets__graphifyignore-template.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__assets__graphifyignore-template.md"
+  },
+  "5a9aa388245c569b75952a5341eb21a12466d74e707d05a33e3b76f2648836aa": {
+    "name": ".agents__skills__agent-ready-context__references__external-docs.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__external-docs-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__external-docs.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__external-docs-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__external-docs-md.md"
+  },
+  "463059a55054c8a362dc9845fa33bc3c8bc35c4025ec31f8b34706906ede4350": {
+    "name": ".agents__skills__graphify__.graphify_version.md",
+    "doc_name": "agents__skills__graphify__-graphify_version",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__.graphify_version.md",
+    "raw_path": "raw/agents__skills__graphify__-graphify_version.md",
+    "source_path": "wiki/sources/agents__skills__graphify__-graphify_version.md"
+  },
+  "36b163cfd1cb1aeb725464e3f630825669cac820f0c16e4520d05069496970c2": {
+    "name": ".agents__skills__graphify__references__add-watch.md.md",
+    "doc_name": "agents__skills__graphify__references__add-watch-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__add-watch.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__add-watch-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__add-watch-md.md"
+  },
+  "447d88f2532284d95d9856f81b289f74fdcba8a46ae9f398da908b68a4e4f14a": {
+    "name": ".agents__skills__graphify__references__exports.md.md",
+    "doc_name": "agents__skills__graphify__references__exports-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__exports.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__exports-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__exports-md.md"
+  },
+  "754fb0603768e37149b0b9c1b369474b0b78d968b16a801b7cf0a8d438b84547": {
+    "name": ".agents__skills__graphify__references__extraction-spec.md.md",
+    "doc_name": "agents__skills__graphify__references__extraction-spec-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__extraction-spec.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__extraction-spec-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__extraction-spec-md.md"
+  },
+  "1092983b49b6a478a2f9e44f585136b5fec8acb7b98d34fd984d47841dbdbf07": {
+    "name": ".agents__skills__graphify__references__github-and-merge.md.md",
+    "doc_name": "agents__skills__graphify__references__github-and-merge-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__github-and-merge.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__github-and-merge-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__github-and-merge-md.md"
+  },
+  "41c70e2f18007314ad6dd13ee66c8a12da06a7e7b8d83df7f474cd397fb10428": {
+    "name": ".agents__skills__graphify__references__hooks.md.md",
+    "doc_name": "agents__skills__graphify__references__hooks-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__hooks.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__hooks-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__hooks-md.md"
+  },
+  "e74559264b539407faadc475a134ab1f6672c9b5e7b1d76a8373b1419d4cf73c": {
+    "name": ".agents__skills__graphify__references__query.md.md",
+    "doc_name": "agents__skills__graphify__references__query-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__query.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__query-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__query-md.md"
+  },
+  "aaf528437bf7e4e3b14b8b0532c4a96f6247ceafba619b6cca8ba0a5713fd0cd": {
+    "name": ".agents__skills__graphify__references__transcribe.md.md",
+    "doc_name": "agents__skills__graphify__references__transcribe-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__transcribe.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__transcribe-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__transcribe-md.md"
+  },
+  "a5365d45461f887baae5c1e10de3ce7f49845aeef639c4276b0d518071697e4c": {
+    "name": ".agents__skills__graphify__references__update.md.md",
+    "doc_name": "agents__skills__graphify__references__update-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__references__update.md.md",
+    "raw_path": "raw/agents__skills__graphify__references__update-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__references__update-md.md"
+  },
+  "4c64502477ec800b880232df2f543435bd0a511496d9db77d944b0f0f584f1b1": {
+    "name": ".agents__skills__graphify__SKILL.md.md",
+    "doc_name": "agents__skills__graphify__SKILL-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__graphify__SKILL.md.md",
+    "raw_path": "raw/agents__skills__graphify__SKILL-md.md",
+    "source_path": "wiki/sources/agents__skills__graphify__SKILL-md.md"
+  },
+  "50dc2be538c937f9eab9d095eef5427dde1d5e87425edf6f41e44e1ec6f09045": {
+    "name": ".agents__skills__openkb__references__commands.md.md",
+    "doc_name": "agents__skills__openkb__references__commands-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__openkb__references__commands.md.md",
+    "raw_path": "raw/agents__skills__openkb__references__commands-md.md",
+    "source_path": "wiki/sources/agents__skills__openkb__references__commands-md.md"
+  },
+  "419a8619c348276be689238fa2f9dc3b2acac8c3a1e3e1e75aa45df4d07c7f23": {
+    "name": ".agents__skills__openkb__references__wiki-schema.md.md",
+    "doc_name": "agents__skills__openkb__references__wiki-schema-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__openkb__references__wiki-schema.md.md",
+    "raw_path": "raw/agents__skills__openkb__references__wiki-schema-md.md",
+    "source_path": "wiki/sources/agents__skills__openkb__references__wiki-schema-md.md"
+  },
+  "dcffd47a043ded9110ed2332a4135c0f647da8391c26241cc0e73f1616800f91": {
+    "name": ".agents__skills__openkb__SKILL.md.md",
+    "doc_name": "agents__skills__openkb__SKILL-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__openkb__SKILL.md.md",
+    "raw_path": "raw/agents__skills__openkb__SKILL-md.md",
+    "source_path": "wiki/sources/agents__skills__openkb__SKILL-md.md"
+  },
+  "fea66c58dfcbef210d594f52396e95eeec50f62c0b00c571ffc0479442de7631": {
+    "name": ".agents__skills__agent-ready-context__references__agent-ready-bootstrap.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__agent-ready-bootstrap-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__agent-ready-bootstrap.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__agent-ready-bootstrap-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__agent-ready-bootstrap-md.md"
+  },
+  "28b06cc76f9b5b451750c01603474d8e37c175671dfb497c280c478e4e3a0b24": {
+    "name": ".agents__skills__subagent-profile-adapter__references__git-tracking-policy.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__references__git-tracking-policy-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__references__git-tracking-policy.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__references__git-tracking-policy-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__references__git-tracking-policy-md.md"
+  },
+  "b33655278838ff4c27f6de42548dcee1c6c1fe026ef7eae6eb8d1043a01af047": {
+    "name": ".agents__skills__agent-ready-context__assets__agents-md.okf-ready.template.md.md",
+    "doc_name": "agents__skills__agent-ready-context__assets__agents-md-okf-ready-template-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__assets__agents-md.okf-ready.template.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__assets__agents-md-okf-ready-template-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__assets__agents-md-okf-ready-template-md.md"
+  },
+  "785a3172ca7baa6b5f257512964ea90148d28d4a9c1ffd250b514b981a4144d0": {
+    "name": ".agents__skills__agent-ready-context__references__dependencies.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__dependencies-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__dependencies.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__dependencies-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__dependencies-md.md"
+  },
+  "09198e0726965f37fa73b172fcda7b47171b7c8b4ab21c8950ea8a70f3c9ddfc": {
+    "name": ".agents__skills__agent-ready-context__references__okf-quality.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__okf-quality-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__okf-quality.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__okf-quality-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__okf-quality-md.md"
+  },
+  "04c7b0ab52c5ba8fed350e4f78ab6611b2845d0490c53187cf0371768628e04f": {
+    "name": ".agents__skills__agent-ready-context__references__openkb-providers.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__openkb-providers-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__openkb-providers.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__openkb-providers-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__openkb-providers-md.md"
+  },
+  "9a39604c9828200ac99af6363c6c7d5cfc18320df8ceb813dd412a46a1b9ed40": {
+    "name": ".agents__skills__skill-creator__references__dependencies.md.md",
+    "doc_name": "agents__skills__skill-creator__references__dependencies-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__references__dependencies.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__references__dependencies-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__references__dependencies-md.md"
+  },
+  "a81217cc96379e737df99e4dc16a30377d0b918461c9e0681e46fae3b076a8e2": {
+    "name": ".agents__skills__subagent-profile-adapter__references__tooling-context-policy.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__references__tooling-context-policy-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__references__tooling-context-policy.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__references__tooling-context-policy-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__references__tooling-context-policy-md.md"
+  },
+  "6272dfddfe774709d1668e757ccd0c469ba985299a4a2eec69460b0cd874b65a": {
+    "name": ".agents__skills__agent-ready-context__LICENSES__Apache-2.0.txt.md",
+    "doc_name": "agents__skills__agent-ready-context__LICENSES__Apache-2-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__LICENSES__Apache-2.0.txt.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__LICENSES__Apache-2-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__LICENSES__Apache-2-0-txt.md"
+  },
+  "59a7f0551f027c4b76e444744fa2d6519c8d87aa93daa9f9ccc4a4064f922042": {
+    "name": ".agents__skills__agent-ready-context__LICENSES__CC-BY-4.0.txt.md",
+    "doc_name": "agents__skills__agent-ready-context__LICENSES__CC-BY-4-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__LICENSES__CC-BY-4.0.txt.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__LICENSES__CC-BY-4-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__LICENSES__CC-BY-4-0-txt.md"
+  },
+  "7e59a5ece248e1564bc6e7598d73917c4a373984ca1279456a345e32e370bb0d": {
+    "name": ".agents__skills__agent-ready-context__LICENSING.md.md",
+    "doc_name": "agents__skills__agent-ready-context__LICENSING-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__LICENSING.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__LICENSING-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__LICENSING-md.md"
+  },
+  "991808734d20c51033e955993040d14d26e4f050c2754a13dc133e3329fecc9f": {
+    "name": ".agents__skills__agent-ready-context__NOTICE.md",
+    "doc_name": "agents__skills__agent-ready-context__NOTICE",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__NOTICE.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__NOTICE.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__NOTICE.md"
+  },
+  "fb0f415e797f2c243ef49d0ef7dcc7938fa4b2f2146e5d3c01f646e36582b36f": {
+    "name": ".agents__skills__agent-ready-context__references__openkb-lifecycle.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__openkb-lifecycle-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__openkb-lifecycle.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__openkb-lifecycle-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__openkb-lifecycle-md.md"
+  },
+  "6f798b92608edc3fe8c8837581e671b5fac303bb33ed26f81d5fc783e6adb3ca": {
+    "name": ".agents__skills__agent-ready-context__references__workflow.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__workflow-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__workflow.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__workflow-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__workflow-md.md"
+  },
+  "829729a3bf668d59e558e613574f0fc8810f2e859d1b7009a2476130a87e844b": {
+    "name": ".agents__skills__agent-ready-context__scripts__build_okf_skeleton.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__build_okf_skeleton-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__build_okf_skeleton.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__build_okf_skeleton-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__build_okf_skeleton-py.md"
+  },
+  "97e5880f41acc34270fdbf10b8ca75822d3e793a2855be9825de819132dff02a": {
+    "name": ".agents__skills__agent-ready-context__scripts__build_okf_source_pack.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__build_okf_source_pack-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__build_okf_source_pack.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__build_okf_source_pack-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__build_okf_source_pack-py.md"
+  },
+  "e68e867739b9e6dcf868db1ca4d73a8d15f284717ac6df432bef0292b3c21d9b": {
+    "name": ".agents__skills__agent-ready-context__scripts__check_prereqs.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__check_prereqs-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__check_prereqs.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__check_prereqs-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__check_prereqs-py.md"
+  },
+  "a640e9d59ef58de30fe7eafbafde0c1d2c8444127518e02b60021f6ae9973613": {
+    "name": ".agents__skills__agent-ready-context__scripts__editorial_pass.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__editorial_pass-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__editorial_pass.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__editorial_pass-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__editorial_pass-py.md"
+  },
+  "03861250cf181d2f7d7b2423ccb0a8a12b444fd26ddbdc7c5621bf93aac196f0": {
+    "name": ".agents__skills__agent-ready-context__scripts__merge_agents_md_okf_section.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__merge_agents_md_okf_section-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__merge_agents_md_okf_section.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__merge_agents_md_okf_section-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__merge_agents_md_okf_section-py.md"
+  },
+  "cc59939bd2b1921befe371d143fc37b92a9362a6503d5999f15fe79af0eca030": {
+    "name": ".agents__skills__agent-ready-context__scripts__prune_okf_orphans.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__prune_okf_orphans-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__prune_okf_orphans.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__prune_okf_orphans-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__prune_okf_orphans-py.md"
+  },
+  "a05f9562b8014452355af4e7e0ede0bbb206f61009b2bfe1ddb170993d12c670": {
+    "name": ".agents__skills__agent-ready-context__scripts__validate_okf_bundle.py.md",
+    "doc_name": "agents__skills__agent-ready-context__scripts__validate_okf_bundle-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__scripts__validate_okf_bundle.py.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__scripts__validate_okf_bundle-py.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__scripts__validate_okf_bundle-py.md"
+  },
+  "6acf9b9c764f30c8f91fdb5dad66b2ade863620243805fb7af3d3f3d9534b6dc": {
+    "name": ".agents__skills__agent-ready-context__SKILL.md.md",
+    "doc_name": "agents__skills__agent-ready-context__SKILL-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__SKILL.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__SKILL-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__SKILL-md.md"
+  },
+  "93658ffb3e71f37afefa254f773febb8db51684dcaa156d4669b9befce05f67c": {
+    "name": ".agents__skills__agent-ready-context__THIRD_PARTY_NOTICES.md.md",
+    "doc_name": "agents__skills__agent-ready-context__THIRD_PARTY_NOTICES-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__THIRD_PARTY_NOTICES.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__THIRD_PARTY_NOTICES-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__THIRD_PARTY_NOTICES-md.md"
+  },
+  "26a01f8be05395609e7ecfcce5eb02b2d0ad5fd31122793b404713a96827a6b8": {
+    "name": ".agents__skills__skill-creator__LICENSES__Apache-2.0.txt.md",
+    "doc_name": "agents__skills__skill-creator__LICENSES__Apache-2-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__LICENSES__Apache-2.0.txt.md",
+    "raw_path": "raw/agents__skills__skill-creator__LICENSES__Apache-2-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__LICENSES__Apache-2-0-txt.md"
+  },
+  "305dfa049cb250b0d18927bbffe1e38e3bc6080fcd7d15d62eb62bbebbe3eabd": {
+    "name": ".agents__skills__skill-creator__LICENSES__CC-BY-4.0.txt.md",
+    "doc_name": "agents__skills__skill-creator__LICENSES__CC-BY-4-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__LICENSES__CC-BY-4.0.txt.md",
+    "raw_path": "raw/agents__skills__skill-creator__LICENSES__CC-BY-4-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__LICENSES__CC-BY-4-0-txt.md"
+  },
+  "bdea4079f5d976b791667435807a264e5f9e223fff56c7ffda905f3dec4862a5": {
+    "name": ".agents__skills__skill-creator__LICENSING.md.md",
+    "doc_name": "agents__skills__skill-creator__LICENSING-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__LICENSING.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__LICENSING-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__LICENSING-md.md"
+  },
+  "3cfea47015bea9b7cd9fb5598d421c1e389298104f084dd59bdba18f5722d33b": {
+    "name": ".agents__skills__skill-creator__NOTICE.md",
+    "doc_name": "agents__skills__skill-creator__NOTICE",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__NOTICE.md",
+    "raw_path": "raw/agents__skills__skill-creator__NOTICE.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__NOTICE.md"
+  },
+  "e3c26a2aff429b9c18d14abb859c645e74126d179f335c9f01da13c0b0b85796": {
+    "name": ".agents__skills__skill-creator__scripts__adopt_generated_skill.py.md",
+    "doc_name": "agents__skills__skill-creator__scripts__adopt_generated_skill-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__scripts__adopt_generated_skill.py.md",
+    "raw_path": "raw/agents__skills__skill-creator__scripts__adopt_generated_skill-py.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__scripts__adopt_generated_skill-py.md"
+  },
+  "4a34a312a6e385f982fae16c6fdd9fc9b38540f73ac5b2406ac3c5c202efff02": {
+    "name": ".agents__skills__skill-creator__scripts__init_skill.py.md",
+    "doc_name": "agents__skills__skill-creator__scripts__init_skill-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__scripts__init_skill.py.md",
+    "raw_path": "raw/agents__skills__skill-creator__scripts__init_skill-py.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__scripts__init_skill-py.md"
+  },
+  "b7a1234ad6a582f688a76f83b63385b1ca196a99c8b913e719b5d69062544980": {
+    "name": ".agents__skills__skill-creator__scripts__quick_validate.py.md",
+    "doc_name": "agents__skills__skill-creator__scripts__quick_validate-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__scripts__quick_validate.py.md",
+    "raw_path": "raw/agents__skills__skill-creator__scripts__quick_validate-py.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__scripts__quick_validate-py.md"
+  },
+  "f567f04330fe00a0887b6eba6b33f5a593143ffb03aa056259ad603cf28ece55": {
+    "name": ".agents__skills__skill-creator__scripts__suggest_skills_from_okf.py.md",
+    "doc_name": "agents__skills__skill-creator__scripts__suggest_skills_from_okf-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__scripts__suggest_skills_from_okf.py.md",
+    "raw_path": "raw/agents__skills__skill-creator__scripts__suggest_skills_from_okf-py.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__scripts__suggest_skills_from_okf-py.md"
+  },
+  "7087e1c5231ce107dc70173c30c55ebd78c91ce31a788bb2903f9ad245958035": {
+    "name": ".agents__skills__skill-creator__SKILL.md.md",
+    "doc_name": "agents__skills__skill-creator__SKILL-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__SKILL.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__SKILL-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__SKILL-md.md"
+  },
+  "c0f57d4e4f5567e2d1b2df3ce6abe90500388b9fbcaa51cb7dfef838000d1a28": {
+    "name": ".agents__skills__skill-creator__THIRD_PARTY_NOTICES.md.md",
+    "doc_name": "agents__skills__skill-creator__THIRD_PARTY_NOTICES-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__skill-creator__THIRD_PARTY_NOTICES.md.md",
+    "raw_path": "raw/agents__skills__skill-creator__THIRD_PARTY_NOTICES-md.md",
+    "source_path": "wiki/sources/agents__skills__skill-creator__THIRD_PARTY_NOTICES-md.md"
+  },
+  "8b44695b4a76cd81c0cdf7966adc0bc14579f3b0a238d8f2c1f43cf9959f583b": {
+    "name": ".agents__skills__subagent-profile-adapter__LICENSES__Apache-2.0.txt.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__LICENSES__Apache-2-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__LICENSES__Apache-2.0.txt.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__LICENSES__Apache-2-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__LICENSES__Apache-2-0-txt.md"
+  },
+  "3ff4fe38b2753239046fe83881ea4e949646d11b48dde833806f5b95a7950811": {
+    "name": ".agents__skills__subagent-profile-adapter__LICENSES__CC-BY-4.0.txt.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__LICENSES__CC-BY-4-0-txt",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__LICENSES__CC-BY-4.0.txt.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__LICENSES__CC-BY-4-0-txt.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__LICENSES__CC-BY-4-0-txt.md"
+  },
+  "a0a6764a06de6cbf5679ff69226781fc1ccf0f113bde8b1942b3c9b372d68ba5": {
+    "name": ".agents__skills__subagent-profile-adapter__LICENSING.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__LICENSING-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__LICENSING.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__LICENSING-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__LICENSING-md.md"
+  },
+  "f535dc6e6bfe5650b27f347643b0f1c0afa28a0893c457290d5800e320b8b1dc": {
+    "name": ".agents__skills__subagent-profile-adapter__NOTICE.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__NOTICE",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__NOTICE.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__NOTICE.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__NOTICE.md"
+  },
+  "8acf0133a69790658195e637bd373374873f6287a8f1a7a2d27b5499dc6804e9": {
+    "name": ".agents__skills__subagent-profile-adapter__scripts__ensure_local_alias.py.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__scripts__ensure_local_alias-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__scripts__ensure_local_alias.py.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__scripts__ensure_local_alias-py.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__scripts__ensure_local_alias-py.md"
+  },
+  "a005f50546e390c3fb1c6f97b446b6a778074b2e4766caff128ab5aa47507ef6": {
+    "name": ".agents__skills__subagent-profile-adapter__scripts__inspect_runtime_context.py.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__scripts__inspect_runtime_context-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__scripts__inspect_runtime_context.py.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__scripts__inspect_runtime_context-py.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__scripts__inspect_runtime_context-py.md"
+  },
+  "bf56dbb2577958bc44b55b63c6ad70eb95daa163f3dd04aec1d6a46e185c3de7": {
+    "name": ".agents__skills__subagent-profile-adapter__scripts__validate_tooling_link_policy.py.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__scripts__validate_tooling_link_policy-py",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__scripts__validate_tooling_link_policy.py.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__scripts__validate_tooling_link_policy-py.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__scripts__validate_tooling_link_policy-py.md"
+  },
+  "bba77b934d44200cf9651151e75d8c72080802afd61c2734563e5666f6ca2e4a": {
+    "name": ".agents__skills__subagent-profile-adapter__SKILL.md.md",
+    "doc_name": "agents__skills__subagent-profile-adapter__SKILL-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__subagent-profile-adapter__SKILL.md.md",
+    "raw_path": "raw/agents__skills__subagent-profile-adapter__SKILL-md.md",
+    "source_path": "wiki/sources/agents__skills__subagent-profile-adapter__SKILL-md.md"
+  },
+  "6a500c627cab14228735a2f3d131671f1d3cd60a9b398f34e7f94115c52c73d6": {
+    "name": "docs__assets__agent-smith.svg.md",
+    "doc_name": "docs__assets__agent-smith-svg",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/docs__assets__agent-smith.svg.md",
+    "raw_path": "raw/docs__assets__agent-smith-svg.md",
+    "source_path": "wiki/sources/docs__assets__agent-smith-svg.md"
+  },
+  "b898863e3185600b7a15e87842d48dab4726d60d3ab81829414953640cb732a5": {
+    "name": "README.md.md",
+    "doc_name": "README-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/README.md.md",
+    "raw_path": "raw/README-md.md",
+    "source_path": "wiki/sources/README-md.md"
+  },
+  "4ae72be3ba5d7c04ee6ad563f0e32424427c8d3f5552af62d3a844165138b678": {
+    "name": "repo-snapshot.md",
+    "doc_name": "repo-snapshot",
+    "type": "md",
+    "path": ".okf-build/input/repo-snapshot.md",
+    "raw_path": "raw/repo-snapshot.md",
+    "source_path": "wiki/sources/repo-snapshot.md"
+  },
+  "8d53b67c4a8f52f6bd7e88ab45bf85bed24b1c9a4025013ada3f925736b20d32": {
+    "name": "agent-skills-spec.md",
+    "doc_name": "agent-skills-spec",
+    "type": "md",
+    "path": ".okf-build/input/external/agent-skills-spec.md",
+    "raw_path": "raw/agent-skills-spec.md",
+    "source_path": "wiki/sources/agent-skills-spec.md"
+  },
+  "e8ed7c84f5b11a0d40b536c3f398ff73b9a6a8e96b162083375d79166f2fa89c": {
+    "name": "karpathy-llm-wiki-gist.md",
+    "doc_name": "karpathy-llm-wiki-gist",
+    "type": "md",
+    "path": ".okf-build/input/external/karpathy-llm-wiki-gist.md",
+    "raw_path": "raw/karpathy-llm-wiki-gist.md",
+    "source_path": "wiki/sources/karpathy-llm-wiki-gist.md"
+  },
+  "29c044e3b315b264318aacc72197bb885954b9a31a299d9fde26a24a107aac49": {
+    "name": "okf-spec.md",
+    "doc_name": "okf-spec",
+    "type": "md",
+    "path": ".okf-build/input/external/okf-spec.md",
+    "raw_path": "raw/okf-spec.md",
+    "source_path": "wiki/sources/okf-spec.md"
+  },
+  "ab2eda8fb6be67d70788130efbf10820793c47ed9c6df96c0da5a22c61336b00": {
+    "name": "graphify-report.md",
+    "doc_name": "graphify-report",
+    "type": "md",
+    "path": ".okf-build/input/graphify-report.md",
+    "raw_path": "raw/graphify-report.md",
+    "source_path": "wiki/sources/graphify-report.md"
+  },
+  "166ff0bc04acec293bdc533c22a164614be1cbb09001434350a24d3f7ed9aa56": {
+    "name": ".agents__skills__agent-ready-context__references__privacy-and-data-flows.md.md",
+    "doc_name": "agents__skills__agent-ready-context__references__privacy-and-data-flows-md",
+    "type": "md",
+    "path": ".okf-build/input/repo-files/.agents__skills__agent-ready-context__references__privacy-and-data-flows.md.md",
+    "raw_path": "raw/agents__skills__agent-ready-context__references__privacy-and-data-flows-md.md",
+    "source_path": "wiki/sources/agents__skills__agent-ready-context__references__privacy-and-data-flows-md.md"
+  }
+}

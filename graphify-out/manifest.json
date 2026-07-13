@@ -1,0 +1,402 @@
+{
+  ".agents/skills/agent-ready-context/scripts/build_okf_skeleton.py": {
+    "mtime": 1783865328.291582,
+    "ast_hash": "27eb72d4cbf6584622d242defb25b724",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/build_okf_source_pack.py": {
+    "mtime": 1783865328.2925813,
+    "ast_hash": "8973c3445ac1173a0153a5b792106344",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/check_prereqs.py": {
+    "mtime": 1783865328.294583,
+    "ast_hash": "bf44d8a4a00fdc0b58c992d97c792264",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/editorial_pass.py": {
+    "mtime": 1783895553.523817,
+    "ast_hash": "04e77e20e6a100d9cc436050f76d5c7d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/init_openkb_noninteractive.py": {
+    "mtime": 1783866093.600253,
+    "ast_hash": "deaeeba681cd6ba293f369671d24fa4a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/merge_agents_md_okf_section.py": {
+    "mtime": 1783867806.9257457,
+    "ast_hash": "9aaa2e618eaaccb2d332d275425acc07",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/preserve_lint_reports.py": {
+    "mtime": 1783897333.7567596,
+    "ast_hash": "0d35f99b7625793e804a8a8d05830a12",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/prune_okf_orphans.py": {
+    "mtime": 1783865328.66895,
+    "ast_hash": "8e112db326f957433b54ad636735753e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/scripts/validate_okf_bundle.py": {
+    "mtime": 1783865328.7580252,
+    "ast_hash": "253e79837dc4c21809a85f88d040b899",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/assets/skill-lock.example.json": {
+    "mtime": 1783865328.8132565,
+    "ast_hash": "5605fb1d74587cfb8ee569ecc5aa81e6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/scripts/adopt_generated_skill.py": {
+    "mtime": 1783865328.9062607,
+    "ast_hash": "05a0dbc524c4e51df38aef6a97b76e6f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/scripts/init_skill.py": {
+    "mtime": 1783865328.9062607,
+    "ast_hash": "7437bb3afeaf4e5bdaea1e848db484c3",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/scripts/quick_validate.py": {
+    "mtime": 1783865328.9072642,
+    "ast_hash": "54a98ce25f2ef5f24acfe1784ff228c8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/scripts/suggest_skills_from_okf.py": {
+    "mtime": 1783865328.9082642,
+    "ast_hash": "312543f62ba0a82024742c050d3dbacf",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py": {
+    "mtime": 1783865329.5439773,
+    "ast_hash": "980f21706b2d1fc97f09855373cab489",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.py": {
+    "mtime": 1783865329.545976,
+    "ast_hash": "e57a8f633d8e747a2ee9c5a9b1bfeb37",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py": {
+    "mtime": 1783865329.545976,
+    "ast_hash": "902facc2a3239937ee082bb8f80b3b61",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/LICENSES/Apache-2.0.txt": {
+    "mtime": 1783865328.173483,
+    "ast_hash": "3b83ef96387f14655fc854ddc3c6bd57",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/LICENSES/CC-BY-4.0.txt": {
+    "mtime": 1783865328.1744618,
+    "ast_hash": "2ab724713fdaf49e4523c4503bfd068d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/LICENSING.md": {
+    "mtime": 1783865328.1754618,
+    "ast_hash": "05e4055c04d2c472248dfc41fcfb0dec",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/SKILL.md": {
+    "mtime": 1783942147.2667792,
+    "ast_hash": "406ab501352c7a04eb96745ec62a0260",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/THIRD_PARTY_NOTICES.md": {
+    "mtime": 1783865328.2335794,
+    "ast_hash": "8c329dfac82f1ce6ce520ff97a4dc880",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/assets/agents-md.okf-ready.template.md": {
+    "mtime": 1783865328.2355855,
+    "ast_hash": "d2a6313b58d51386f586a2c9d8f69d2a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/assets/external-docs.example.txt": {
+    "mtime": 1783865328.2355855,
+    "ast_hash": "6e5e84462cec5394e5d49402ff8bc237",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/assets/okf-validate.ci.yml": {
+    "mtime": 1783865328.2375817,
+    "ast_hash": "828b7eaa3e3a4a0e84d710029eef4ab7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/agent-ready-bootstrap.md": {
+    "mtime": 1783895405.6528115,
+    "ast_hash": "cacb967eaaa6341ea8d172a958cc37c1",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/dependencies.md": {
+    "mtime": 1783865328.2405815,
+    "ast_hash": "be926f2ba6200d50dba9f9a684a61fac",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/external-docs.md": {
+    "mtime": 1783865328.2405815,
+    "ast_hash": "ae9f47852d91ebf66df844a6b4345c4f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/official-okf-spec-web-check.md": {
+    "mtime": 1783865328.2415817,
+    "ast_hash": "3f6056796d6846e13f8f5759e0afd2f9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/okf-quality.md": {
+    "mtime": 1783865328.242581,
+    "ast_hash": "89540964d86bff31f76617990d5a4530",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/openkb-lifecycle.md": {
+    "mtime": 1783895386.0985928,
+    "ast_hash": "e20feb34b55bb5732da98df92a1d2833",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/openkb-providers.md": {
+    "mtime": 1783865872.28269,
+    "ast_hash": "ab83c779f9edab72202e1b0b430ce4a9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/privacy-and-data-flows.md": {
+    "mtime": 1783865328.2455826,
+    "ast_hash": "fc6182aaf549c82c61ea12be645faf79",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agent-ready-context/references/workflow.md": {
+    "mtime": 1783895369.6655045,
+    "ast_hash": "9319cb70f690ff5d160f829e863c9155",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/SKILL.md": {
+    "mtime": 1783587826.5379336,
+    "ast_hash": "130ab071af516397ea29dd1edaa3d001",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/add-watch.md": {
+    "mtime": 1783515272.443971,
+    "ast_hash": "d59d027fe449f06aa03905a01184e779",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/exports.md": {
+    "mtime": 1783515272.4454768,
+    "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/extraction-spec.md": {
+    "mtime": 1783515272.4464846,
+    "ast_hash": "42fef56a01698118f7fd722acdadea34",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/github-and-merge.md": {
+    "mtime": 1783515272.4464846,
+    "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/hooks.md": {
+    "mtime": 1783515272.4474845,
+    "ast_hash": "aea24fe86e18fe8aeb304403032cfce7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/query.md": {
+    "mtime": 1783515272.4514842,
+    "ast_hash": "3c46f8ad006874260614ed8657d02307",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/transcribe.md": {
+    "mtime": 1783515272.4534843,
+    "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/graphify/references/update.md": {
+    "mtime": 1783515272.4544847,
+    "ast_hash": "c698309979460d0f02ba616417844399",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openkb/SKILL.md": {
+    "mtime": 1783587842.0214274,
+    "ast_hash": "c600bcf87458f07a4f3d8679448266d7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openkb/references/commands.md": {
+    "mtime": 1783587842.0214274,
+    "ast_hash": "1a03cfe3104c06ab17c03f276cf43436",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openkb/references/wiki-schema.md": {
+    "mtime": 1783587842.022432,
+    "ast_hash": "1be909fbbba83ef661dbcd8a552f32bc",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/LICENSES/Apache-2.0.txt": {
+    "mtime": 1783865328.7850277,
+    "ast_hash": "3b83ef96387f14655fc854ddc3c6bd57",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/LICENSES/CC-BY-4.0.txt": {
+    "mtime": 1783865328.7870345,
+    "ast_hash": "2ab724713fdaf49e4523c4503bfd068d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/LICENSING.md": {
+    "mtime": 1783865328.7880344,
+    "ast_hash": "2d971ce20aa8f6e66789b67dcc77f9be",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/SKILL.md": {
+    "mtime": 1783942147.26778,
+    "ast_hash": "8fcc570a7f22e311c6948dda2eb653a1",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/THIRD_PARTY_NOTICES.md": {
+    "mtime": 1783865328.8016798,
+    "ast_hash": "03bd85394fcd32a01ce9027ab4a542ba",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/assets/skill-template.md": {
+    "mtime": 1783865328.8282557,
+    "ast_hash": "00653a8de716369694b43aa3c81f5282",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/references/action-vs-context.md": {
+    "mtime": 1783865328.8442519,
+    "ast_hash": "a459ffda07e708c53b581dc0c9059a52",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/references/dependencies.md": {
+    "mtime": 1783865328.8782535,
+    "ast_hash": "873c2d2d4fe6478d0ad7ee13531bf145",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/references/source-attribution.md": {
+    "mtime": 1783865328.8792553,
+    "ast_hash": "b894ef66c39fb178381ac3319cc191f9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/references/testing-skills.md": {
+    "mtime": 1783865328.8992608,
+    "ast_hash": "1c1968a0a96b751e8cadddb2aa080aa6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/skill-creator/references/vendor-skill-management.md": {
+    "mtime": 1783865328.9002612,
+    "ast_hash": "58c5b787002c85bf8ccc8b6ec52842b9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/LICENSES/Apache-2.0.txt": {
+    "mtime": 1783865328.910261,
+    "ast_hash": "3b83ef96387f14655fc854ddc3c6bd57",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/LICENSES/CC-BY-4.0.txt": {
+    "mtime": 1783865328.911261,
+    "ast_hash": "2ab724713fdaf49e4523c4503bfd068d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/LICENSING.md": {
+    "mtime": 1783865328.9223542,
+    "ast_hash": "fd29dc9cd7f977442f46d4ed1fef99f5",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/SKILL.md": {
+    "mtime": 1783942147.270787,
+    "ast_hash": "a44100f70367c3013d314f3790d852e9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/assets/profile-intents.example.md": {
+    "mtime": 1783865328.9250221,
+    "ast_hash": "be99ac952ed0f1526ad27d5c07eea842",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/references/git-tracking-policy.md": {
+    "mtime": 1783865328.9338505,
+    "ast_hash": "91476f53a0ec63aa5b7bf9af98b25065",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/references/harness-docs.md": {
+    "mtime": 1783865328.9343846,
+    "ast_hash": "022e3a96558ba15d55afb5655f108200",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/references/profile-authoring.md": {
+    "mtime": 1783865328.934918,
+    "ast_hash": "4d656a686e7840b99ac382702a97fa87",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/references/runtime-detection.md": {
+    "mtime": 1783865328.9360747,
+    "ast_hash": "4fd4e8ce2428c2ceb4c65a42b1241d13",
+    "semantic_hash": ""
+  },
+  ".agents/skills/subagent-profile-adapter/references/tooling-context-policy.md": {
+    "mtime": 1783866344.0453389,
+    "ast_hash": "215ae9a11d6b3a986a9094795c855de2",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1783867843.1841314,
+    "ast_hash": "fcfd5787793133a9822e91548e9eab55",
+    "semantic_hash": ""
+  },
+  "CODE_OF_CONDUCT.md": {
+    "mtime": 1783936117.4438374,
+    "ast_hash": "7e0f3a320e2ec33677caeb57f8d8d212",
+    "semantic_hash": ""
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1783936144.0952373,
+    "ast_hash": "fa718338d7c04b2a24126d54339c6e56",
+    "semantic_hash": ""
+  },
+  "LICENSES/Apache-2.0.txt": {
+    "mtime": 1783807370.029796,
+    "ast_hash": "3b83ef96387f14655fc854ddc3c6bd57",
+    "semantic_hash": ""
+  },
+  "LICENSES/CC-BY-4.0.txt": {
+    "mtime": 1783807370.0307927,
+    "ast_hash": "2ab724713fdaf49e4523c4503bfd068d",
+    "semantic_hash": ""
+  },
+  "LICENSES/LicenseRef-All-Rights-Reserved.txt": {
+    "mtime": 1783807370.0307927,
+    "ast_hash": "b2ddf5b03abbdd5a6ada819fb347e046",
+    "semantic_hash": ""
+  },
+  "LICENSES/LicenseRef-Karpathy-Gist-No-License-Stated.txt": {
+    "mtime": 1783936031.9760509,
+    "ast_hash": "18eb183eb8d8e6d856b9d74444a13249",
+    "semantic_hash": ""
+  },
+  "LICENSES/MIT.txt": {
+    "mtime": 1783807370.0317938,
+    "ast_hash": "3912d958d00bac4a6b550f75d7c806bb",
+    "semantic_hash": ""
+  },
+  "LICENSING.md": {
+    "mtime": 1783936104.3750587,
+    "ast_hash": "e1627625ca9680423fe3012780cf4a71",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1783945514.5165145,
+    "ast_hash": "ec5d7347eb48332be69fbc87fcb38665",
+    "semantic_hash": ""
+  },
+  "SECURITY.md": {
+    "mtime": 1783936127.403913,
+    "ast_hash": "954d3e6fc97c1e09f8468738a2251d46",
+    "semantic_hash": ""
+  },
+  "THIRD_PARTY_NOTICES.md": {
+    "mtime": 1783937851.6758842,
+    "ast_hash": "4e2ff1dc118477c6b30d41961bcb7028",
+    "semantic_hash": ""
+  },
+  "docs/assets/agent-smith.svg": {
+    "mtime": 1783807370.0477927,
+    "ast_hash": "e66c31191381d513fed7456650bc803c",
+    "semantic_hash": ""
+  }
+}

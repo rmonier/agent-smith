@@ -1,0 +1,18 @@
+# LF normalization keeps deterministic OKF staging hashes stable across platforms.
+* text=auto eol=lf
+
+# Binary files must never be text-normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

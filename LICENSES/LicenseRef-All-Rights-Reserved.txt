@@ -1,0 +1,13 @@
+All Rights Reserved
+
+This material is copyrighted by its stated author and is made visible in
+this public repository for transparency and reference only.
+
+No licence is granted to reproduce, distribute, publicly display, publicly
+perform, sublicense, or create derivative works from this material, beyond
+whatever limited rights the hosting platform's terms of service grant to
+view and fork a public repository.
+
+This is not a public-domain dedication and not the SPDX "Unlicense". It is
+the absence of a licence grant: all copyright rights are reserved by the
+author.

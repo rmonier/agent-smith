@@ -1,0 +1,22 @@
+
+# agent-ready pipeline build artifacts
+okf/.okf-build/
+okf/output/
+okf/wiki/reports/
+graphify-out/cost.json
+graphify-out/cache/
+__pycache__/
+
+# user-scoped harness/tooling context (committed navigation stub excepted)
+okf/wiki/tooling/*
+!okf/wiki/tooling/index.md
+
+# OpenKB local state (hash registry + config template versioned; config.yaml
+# is per-user provider choice and stays local)
+okf/.openkb/*
+!okf/.openkb/config.yaml.example
+!okf/.openkb/hashes.json
+
+# local provider credentials
+.env
+okf/.env

@@ -1,0 +1,2 @@
+https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html
+https://docs.confluent.io/platform/current/clients/producer.html

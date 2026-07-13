@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "When redistributing, adapting, publishing, or discussing these agent skills, please cite this repository."
+title: "agent-smith"
+type: software
+authors:
+  - family-names: "Monier"
+    given-names: "Romain"
+    website: "https://github.com/rmonier"
+repository-code: "https://github.com/rmonier/agent-smith"
+license:
+  - "Apache-2.0"
+  - "CC-BY-4.0"

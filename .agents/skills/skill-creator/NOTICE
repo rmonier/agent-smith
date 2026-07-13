@@ -1,0 +1,13 @@
+agent-smith — skill-creator
+Copyright 2026 Romain Monier
+
+Original source:
+https://github.com/rmonier/agent-smith
+
+Author:
+Romain Monier
+https://github.com/rmonier
+
+This directory's SKILL.md incorporates a small number of passages adapted
+from Anthropic's and OpenAI's own skill-creator skills (Apache-2.0). See
+THIRD_PARTY_NOTICES.md for the exact passages and sources.
