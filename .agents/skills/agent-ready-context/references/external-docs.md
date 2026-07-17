@@ -9,8 +9,8 @@ Use this when the user supplies URLs such as Confluent, OpenSearch, Kubernetes, 
 3. Prefer official vendor docs over blogs and forum answers.
 4. Extract only facts relevant to the repo and the requested OKF topic.
 5. Avoid large copied passages. Write short paraphrased facts with citations or source URL.
-6. Save one Markdown evidence file per URL under `okf/.okf-build/input/external/`.
-7. Ingest staged evidence with `openkb --kb-dir ./okf add ./okf/.okf-build/input/external/`.
+6. Save one reviewed Markdown evidence file per URL under `okf/external/<topic>.md` — the tracked external-evidence home the staged runner includes in the corpus even though the rest of `okf/` is never staged. Never write fetched evidence into live `okf/wiki/` as an unreviewed page.
+7. Once the reviewed evidence is tracked, it enters the next disclosed OpenWiki run automatically; verify its presence with the wrapper's dry-run inventory before `--execute`.
 8. The generated wiki pages may cite the evidence file and the original URL.
 
 ## Security rules for fetched content
@@ -51,6 +51,6 @@ Relevant facts:
 
 ## Example use
 
-For a Kafka producer repo, Confluent producer configuration docs can enrich pages about delivery guarantees, retries, idempotence, timeouts, batching, and operational tuning. Save the facts first, then ask the compiler to create or update pages such as `kafka-producer-reliability.md`.
+For a Kafka producer repo, Confluent producer configuration docs can enrich pages about delivery guarantees, retries, idempotence, timeouts, batching, and operational tuning. Save the facts first, then ask the isolated update to create or update pages such as `kafka-producer-reliability.md`.
 
-Alternative: for a user-supplied URL, ask for consent and run `openkb --kb-dir ./okf add <url>`. OpenKB fetches and converts the URL itself, and the fetched content lands in `okf/raw/` as OpenKB-managed source.
+Do not give OpenWiki a URL to fetch autonomously. The agent-controlled evidence step preserves consent, provenance, prompt-injection review, and exact egress scope.

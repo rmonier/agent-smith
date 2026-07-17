@@ -18,7 +18,7 @@ Authoritative sources to open with the web tool:
 5. Run local validation:
 
 ```bash
-uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki
+uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .
 ```
 
 6. If the local validator conflicts with the fresh official spec, follow the official spec and report which local rule appears stale or too strict.

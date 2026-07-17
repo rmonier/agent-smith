@@ -20,9 +20,9 @@ okf/wiki/tooling/
     └── <provider>.md   optional: provider/model runtime observations
 ```
 
-This location is a hand-authored OpenKB wiki exception, not a separate storage system. It remains valid only if every non-reserved `.md` file has OKF frontmatter and `type`.
+This location is a hand-authored OKF wiki exception, not a separate storage system. It remains valid only if every non-reserved `.md` file has OKF frontmatter and `type`.
 
-Declare the custom `tooling/` section in `okf/wiki/AGENTS.md`, OpenKB's on-disk wiki-conventions manual. Edit that file only with user consent and keep the declaration when OpenKB regenerates conventions. Do not ingest tooling pages through `openkb add`; they are not source material for project knowledge.
+Declare the custom `tooling/` section in `okf/wiki/INSTRUCTIONS.md` so OpenWiki preserves it. Keep local tooling pages out of producer input; they are runtime context, not repository source evidence.
 
 Do not create additional non-standard folders under `.agents/` for tooling context.
 
@@ -35,14 +35,14 @@ okf/wiki/tooling/*
 !okf/wiki/tooling/index.md
 ```
 
-The one committed artifact is the **navigation stub** `okf/wiki/tooling/index.md` — the same pattern as the committed `config.yaml.example` anchoring the local provider config. The stub is deliberately **user-neutral**: it names no harness, model, or user, so committing it requires no consent — per-user uniqueness lives entirely in the local pages, and consent rules apply to committing those. It cannot be local itself: the bundle-root `index.md` is committed and machine-managed, so its tooling entry must resolve on every clone, and the stub is that stable target (a local-only stub would leave every other clone with a dangling reference — the incoherence this design exists to prevent). Create it, together with the labeled bundle-root index entry, the first time any tooling content exists; both are committed, everything else under `tooling/` stays local. Example stub:
+The one committed artifact is the **navigation stub** `okf/wiki/tooling/index.md`. The stub is deliberately **user-neutral**: it names no harness, model, or user, so committing it requires no consent — per-user uniqueness lives entirely in the local pages, and consent rules apply to committing those. It cannot be local itself: the bundle-root `index.md` is committed and machine-managed, so its tooling entry must resolve on every clone, and the stub is that stable target (a local-only stub would leave every other clone with a dangling reference — the incoherence this design exists to prevent). Create it, together with the labeled bundle-root index entry, the first time any tooling content exists; both are committed, everything else under `tooling/` stays local. Example stub:
 
 ```markdown
 # Tooling context (user-scoped)
 
-This section holds hand-authored runtime, harness, and provider observations that help an individual agent operate the repository. These pages are local by default and may link outward to project knowledge; compiled project pages must not depend on them.
+This section holds hand-authored runtime, harness, and provider observations that help an individual agent operate the repository. These pages are local by default and may link outward to project knowledge; project pages must not depend on them.
 
-Local harness and provider pages are the first local context for harness-specific work. They can contain important environment observations that do not belong in vendor-agnostic skills or compiled project knowledge, including launcher constraints, approval-state distinctions, provider compatibility, and runtime performance.
+Local harness and provider pages are the first local context for harness-specific work. They can contain important environment observations that do not belong in vendor-agnostic skills or project knowledge, including launcher constraints, approval-state distinctions, provider compatibility, and runtime performance.
 
 Local pages are intentionally not enumerated in this committed stub; discover them with a listing that includes ignored files and files inside subfolders, then select the pages matching the active harness and provider.
 
@@ -53,9 +53,9 @@ Rules that keep every clone coherent:
 
 - **Never enumerate local pages in committed index files** (neither the stub nor the bundle root): the entries would dangle on other clones and dirty the worktree. Local pages are discovered by listing the directory — the stub says so.
 - Any harness/provider mix works without committed churn: one `harnesses/<harness>.md` per harness, optional `providers/<provider>.md` pages, all local — nothing committed enumerates the overlay, so nothing goes stale.
-- Do not leave a local tooling page with no `[[wikilinks]]`: OpenKB defines that page as an orphan because committed indexes intentionally cannot enumerate it. Give every local page at least one valid outgoing wikilink to durable project knowledge (for example `[[index|Project knowledge index]]`); tooling-to-project is allowed and keeps lint clean without committing local navigation.
+- Do not leave a local tooling page with no outgoing link: the link-policy validator requires at least one standard relative Markdown link to durable project knowledge, such as `[Project index](../../index.md)`. Tooling-to-project is allowed and keeps the local overlay connected without committing local navigation.
 - Teams that standardize on a harness may opt into committing specific tooling pages — ask first, same consent rule as `references/git-tracking-policy.md`.
-- OKF compliance holds on every clone: the committed tree and the committed-plus-local overlay are each a valid bundle (the spec allows arbitrary subdirectories and index files in any directory), and committed content never links to local pages, so wikilink integrity never breaks for another user.
+- OKF compliance holds on every clone: the committed tree and the committed-plus-local overlay are each a valid bundle (the spec allows arbitrary subdirectories and index files in any directory), and committed content never links to local pages, so link integrity never breaks for another user.
 
 ## Required semantics
 
@@ -120,7 +120,7 @@ uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_pol
 ```
 
 The validator fails if project OKF concept pages link back to `okf/wiki/tooling/`, if `okf/wiki/tooling/` has pages that the bundle-root `index.md` does not reference, or if tooling pages exist without the committed `tooling/index.md` navigation stub.
-It also fails when a non-reserved local tooling page has no outgoing `[[wikilink]]`, because that state is guaranteed to appear as an OpenKB orphan while local pages remain correctly absent from committed indexes.
+It also fails when a non-reserved local tooling page has no outgoing Markdown link, because that state is guaranteed to appear as an OKF orphan while local pages remain correctly absent from committed indexes.
 
 
 ## Default artifact rule

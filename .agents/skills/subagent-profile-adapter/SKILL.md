@@ -4,7 +4,7 @@ description: Creates and maintains harness-specific subagent/profile adapters af
 license: See LICENSING.md
 compatibility: Requires an Agent Skills compatible harness, repository file read/write access, and Python 3.11+ for optional validation helpers (run them with uv when available). Requires web access or local harness documentation when current subagent/profile semantics are unknown.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   spec: agentskills.io
   author: Romain Monier
   author-url: https://github.com/rmonier
@@ -25,7 +25,7 @@ This skill does **not** define a new portable subagent standard. It helps the cu
 
 ## Boundary rules
 
-- **OKF wiki (OpenKB-compiled) = context source of truth**: durable project knowledge, external evidence, tooling context, and provenance.
+- **OKF wiki = context source of truth**: durable project knowledge, external evidence, tooling context, and provenance.
 - **AGENTS.md = orientation/index/best practices**: short repo guide for agents.
 - **Agent Skills = actions**: reusable procedures and scripts under `.agents/skills/`.
 - **Subagent/profile adapters = runtime-specific projections**: generated or maintained for the active harness only.
@@ -37,7 +37,7 @@ Do not create new directories under `.agents/` except Agent Skills under `.agent
 Run this skill only after:
 
 1. `AGENTS.md` exists or has been refreshed by `agent-ready-context`.
-2. `okf/wiki/` exists or has been refreshed.
+2. `okf/wiki/index.md` exists or has been refreshed.
 3. Custom action skills have been created or reviewed by `skill-creator` when repeated actions were found.
 
 Then:
@@ -63,7 +63,7 @@ Then:
 4. **Design candidate subagent/profile adapters.**
    - Derive them from actual repository needs, OKF pages, and available skills.
    - Good candidates are task-scoped and permission-bounded, for example `okf-curator`, `skill-architect`, `repo-cartographer`, `security-reviewer`, or `dependency-scout`.
-   - Do not embed long project context inside profile files. Point to `AGENTS.md`, `okf/wiki/`, and relevant skills.
+   - Do not embed long project context inside profile files. Point to `AGENTS.md`, `okf/wiki/index.md`, and relevant skills.
 
 5. **Ask the user how to track generated harness-specific files.**
    - Local-only via `.git/info/exclude`.
@@ -75,7 +75,7 @@ Then:
    - Do not rely on hardcoded vendor renderers.
    - Do not assume fields are stable between harness versions.
    - Read the current docs and implement the native format directly.
-   - Keep adapter files short: purpose, activation/description, permissions/tools if supported, and instructions to consult `AGENTS.md`, `okf/wiki/`, and skills.
+   - Keep adapter files short: purpose, activation/description, permissions/tools if supported, and instructions to consult `AGENTS.md`, `okf/wiki/index.md`, and skills.
 
 7. **Validate outputs.**
    - Verify the files are in the correct harness location.
@@ -92,7 +92,7 @@ uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_pol
 
 Harness documentation belongs in `okf/wiki/tooling/`, not in extra `.agents/` folders.
 
-Because the wiki is OpenKB-compiled, declare the custom `tooling/` section in `okf/wiki/AGENTS.md`, OpenKB's on-disk wiki-conventions manual. Edit that file only with user consent, and preserve the declaration after OpenKB regenerates conventions. Tooling pages are hand-authored exceptions to the no-hand-edit rule and are never ingested through `openkb add`; ingestion would let the compiler scatter harness details across project pages.
+Declare the hand-authored `tooling/` exception in `okf/wiki/INSTRUCTIONS.md` so OpenWiki preserves it. Keep local tooling pages out of producer input, and review each refresh before accepting it.
 
 The link direction stays strict for concept pages:
 

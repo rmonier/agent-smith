@@ -8,10 +8,9 @@ This skill contains material under multiple licences.
 - Original executable files under `scripts/` are licensed under the
   Apache License 2.0 (`Apache-2.0`).
 
-`scripts/editorial_pass.py` incorporates a small OpenKB-derived fallback
-(Apache-2.0, same licence as the rest of this skill's code) — see
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for the exact copied
-symbols, upstream source, and copyright notice.
+The skill contains no copied vendor code. Its project-owned OpenWiki
+wrappers invoke an exact external dependency without incorporating vendor
+source; the skill distributes no third-party material.
 
 Copyright © 2026
 [Romain Monier](https://github.com/rmonier).

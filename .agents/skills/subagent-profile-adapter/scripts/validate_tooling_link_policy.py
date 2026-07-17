@@ -4,7 +4,7 @@
 # ///
 # SPDX-FileCopyrightText: 2026 Romain Monier <https://github.com/rmonier>
 # SPDX-License-Identifier: Apache-2.0
-"""Validate the OpenKB wiki tooling-context link direction policy.
+"""Validate the OKF wiki tooling-context link direction policy.
 
 Policy:
 - pages under okf/wiki/tooling/ may link to project pages;
@@ -32,7 +32,6 @@ LINK_RE = re.compile(
     r"\[[^\]]+\]\(([^)]+)\)|(?<![\w./-])okf/wiki/tooling/[\w./#-]+|"
     r"(?<![\w./-])wiki/tooling/[\w./#-]+|(?<![\w./-])tooling/[\w./#-]+"
 )
-WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
 
 def is_tooling_link(target: str) -> bool:
@@ -92,7 +91,7 @@ def should_scan_for_project_to_tooling_links(rel: Path) -> bool:
     rel_posix = rel.as_posix()
     if rel_posix in {"index.md", "log.md"}:
         return True
-    if rel_posix == "AGENTS.md":
+    if rel_posix in {"AGENTS.md", "INSTRUCTIONS.md"}:
         return False
     return rel.name == "index.md" or (bool(rel.parts) and rel.parts[0] == "concepts")
 
@@ -121,7 +120,7 @@ def main() -> int:
 
     for path in sorted(okf.rglob("*.md")):
         rel = path.relative_to(okf)
-        if rel.as_posix() == "AGENTS.md":
+        if rel.as_posix() in {"AGENTS.md", "INSTRUCTIONS.md"}:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         in_tooling = tooling in path.parents or path == tooling
@@ -130,10 +129,10 @@ def main() -> int:
             if rel.name not in {"index.md", "log.md"}:
                 if fm.get("scope") != "tooling" and fm.get("type") != "tooling-context":
                     warnings.append(f"{rel}: tooling page should declare scope: tooling or type: tooling-context")
-                if not WIKILINK_RE.search(strip_code_preserve_lines(text)):
+                if not re.search(r"\[[^\]]+\]\([^)]+\)", strip_code_preserve_lines(text)):
                     errors.append(
-                        f"{rel}: local tooling page has no outgoing wikilink; add one valid "
-                        "[[project-page]] link so OpenKB structural lint does not classify it as orphaned"
+                        f"{rel}: local tooling page has no outgoing Markdown link; add one valid "
+                        "relative link to durable project knowledge so the page is not orphaned"
                     )
             continue
 

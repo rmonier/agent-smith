@@ -29,4 +29,4 @@ Include:
 
 Do not copy long documentation pages. Summarize only the fields needed for adapter creation and cite/link the source.
 
-After writing a tooling page, update the bundle-root `okf/wiki/index.md` so it lists `tooling/` in its clearly labeled harness-specific section, and record the change in `okf/wiki/log.md`. Ensure `okf/wiki/AGENTS.md` declares the custom section. See `references/tooling-context-policy.md`; the link-policy validator fails when tooling pages exist without that index entry.
+After writing a tooling page, update the bundle-root `okf/wiki/index.md` so it lists `tooling/` in its clearly labeled harness-specific section, and record the change in `okf/wiki/log.md`. Ensure `okf/wiki/INSTRUCTIONS.md` declares the custom section for OpenWiki preservation. See `references/tooling-context-policy.md`; the link-policy validator fails when tooling pages exist without that index entry.

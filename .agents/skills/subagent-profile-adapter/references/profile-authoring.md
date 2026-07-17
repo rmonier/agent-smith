@@ -36,5 +36,5 @@ Profile adapters must not embed:
 They should reference:
 
 - `AGENTS.md` for orientation;
-- `okf/wiki/` for source-of-truth context;
+- `okf/wiki/index.md` as the canonical context front door for source-of-truth context;
 - `.agents/skills/` for actions.

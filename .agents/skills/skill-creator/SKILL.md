@@ -4,7 +4,7 @@ description: Creates or updates vendor-neutral Agent Skills for repeated executa
 license: See LICENSING.md
 compatibility: Requires Python 3.11+ for bundled scripts; run them with uv when available. Intended for any Agent Skills compatible harness. Writes only under .agents/skills/ unless the user explicitly chooses another repository-local path.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   spec: agentskills.io
   author: Romain Monier
   author-url: https://github.com/rmonier
@@ -12,7 +12,6 @@ metadata:
   skill-creator.companion-skills: agent-ready-context, subagent-profile-adapter
   skill-creator.companion-skill-roles: agent-ready-context=optional upstream OKF context; subagent-profile-adapter=optional downstream harness adapters
   skill-creator.prereq-guidance: references/dependencies.md
-  skill-creator.optional-packaging: openkb skill factory (okf/output/skills/, adopt into .agents/skills/)
 allowed-tools: Read Write Edit Bash(uv:*) Bash(python:*) Bash(find:*) Bash(test:*) Bash(chmod:*) Bash(git:*)
 ---
 
@@ -23,7 +22,7 @@ Use this skill to create or update **action skills**. A skill is not a knowledge
 ## Boundary rules
 
 - **Skill = action**: repeatable procedures, scripts, transformations, checks, migrations, scaffolds, tool calls, or workflow recipes.
-- **OKF wiki (OpenKB-compiled) = context**: durable knowledge, architecture, decisions, external documentation evidence, provenance, and explanations.
+- **OKF wiki = context**: durable knowledge, architecture, decisions, external documentation evidence, provenance, and explanations.
 - **AGENTS.md = orientation/index/best practices**: setup/test commands, repo rules, routing hints, and maintenance pointers.
 
 Project skills live under `.agents/skills/<skill-name>/`. Vendor skills — installed by a skill manager or vendored into `.agents/skills/` — are read-only; create custom companion skills instead of editing vendor skill contents. Do not invent non-standard dependency fields in `SKILL.md`; use `compatibility`, namespaced `metadata` keys (dependency-flavored ones reuse the shared vocabulary in `references/dependencies.md`), and `scripts/check_prereqs.py` when needed.
@@ -86,31 +85,13 @@ When `okf/wiki/` reveals repeated actions, detect candidates first — zero-LLM,
 uv run .agents/skills/skill-creator/scripts/suggest_skills_from_okf.py --repo . --okf okf/wiki
 ```
 
-Create or update custom skills only for true actions. Leave facts, decisions, architecture, and external documentation in OKF.
-
-For each candidate, pick the generation path — prefer (a) when its conditions hold, fall back to (b):
-
-**(a) OpenKB Skill Factory — prefer this when it applies.** When OpenKB is adopted, `okf/wiki/` already documents the action with real concept/entity coverage (the generation agent's only context is the wiki, read live through `list_wiki_dir`/`read_wiki_file` — it cannot draft what the wiki doesn't cover, so a thin or absent topic gets a thin draft, no better than scaffolding by hand), and the user consents to the LLM call it costs (same disclosure as any OpenKB command — `references/privacy-and-data-flows.md`), compile a wiki-grounded draft instead of a blank scaffold:
-
-```bash
-openkb --kb-dir ./okf skill new <skill-name> "<natural-language intent>"
-```
-
-The draft lands under `okf/output/skills/<skill-name>/` (ignored build output) — never directly in `.agents/skills/`. Adopt it with the bundled script, which copies and validates in one step (refuses to overwrite an existing skill without `--force`):
-
-```bash
-uv run .agents/skills/skill-creator/scripts/adopt_generated_skill.py <skill-name> --repo .
-```
-
-Adoption ends with a caveat-preservation review: LLM distillation tends to flatten conditions into unconditional steps, so compare the adopted skill against the `okf/wiki/` pages it came from (and their `sources:` citation chain) and restore any constraint, boundary, or "never do" that got lost. The adopted copy is project-owned from that point — edit it like any custom skill, including reshaping it to this file's standards (trigger-style description, minimal `allowed-tools`, untrusted-content handling, no secrets) — see `references/vendor-skill-management.md`.
-
-**(b) Hand scaffold — the fallback.** When OpenKB isn't adopted, the repository is in zero-LLM/air-gapped mode, the wiki has no real coverage of the action yet, or the user prefers to skip the LLM call and adoption-review cycle for something small or fragile, scaffold by hand instead:
+Create or update custom skills only for true actions. Leave facts, decisions, architecture, and external documentation in OKF. Scaffold the skill deterministically:
 
 ```bash
 uv run .agents/skills/skill-creator/scripts/init_skill.py <skill-name> --path .agents/skills --resources scripts,references,assets
 ```
 
-Both paths converge on the same bar: validate with `quick_validate.py` before use. These standards bind adopted generated skills exactly like hand-written ones — vendored vendor skills (such as the official OpenKB set) are the one exception, staying exactly as shipped (see `references/vendor-skill-management.md`).
+Populate the scaffold by reasoning from the OKF context and its source evidence, then test and validate it. This path does not make a separate provider call or delegate skill authorship to a memory vendor.
 
 ## Naming
 

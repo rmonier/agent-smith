@@ -26,18 +26,14 @@ Typical local layout for an agent-ready repository:
 okf/wiki/
 ├── index.md
 ├── log.md
-├── AGENTS.md
-├── concepts/
-├── summaries/
-├── entities/
-├── sources/
-├── explorations/
-├── reports/
+├── quickstart.md
+├── INSTRUCTIONS.md
+├── <concern or module subdirectories>/
 └── tooling/
     └── harnesses/
 ```
 
-`tooling/` is valid OKF because it is just a normal concept grouping. It must still obey the concept rules: files such as `tooling/harnesses/opencode.md` need YAML frontmatter and a non-empty `type`, while `tooling/index.md` and `tooling/log.md` remain reserved files. In this repository policy, `tooling/` is a hand-authored OpenKB wiki exception and must be declared in `okf/wiki/AGENTS.md`.
+`tooling/` is valid OKF because it is just a normal concept grouping. It must still obey the concept rules: files such as `tooling/harnesses/opencode.md` need YAML frontmatter and a non-empty `type`, while `tooling/index.md` and `tooling/log.md` remain reserved files. In this repository policy, `tooling/` is the hand-authored user-scoped exception and must be declared in `okf/wiki/INSTRUCTIONS.md` so updates preserve it.
 
 The local `tooling -> project allowed / project -> tooling forbidden` rule is not an OKF conformance rule. It is this repository's semantic separation policy for harness/tooling context.
 
@@ -130,21 +126,26 @@ Consumers should not reject a bundle only because of:
 - broken cross-links;
 - missing `index.md` files.
 
-## OpenKB wiki mapping
+## OpenWiki producer mapping
 
-OpenKB-generated concept pages carry fields such as `type`, `description`, and `sources`; summary pages carry `sources`, `brief`, `doc_type`, and `full_text`. OpenKB normally supplies the human-readable title as the body H1 rather than duplicating it in frontmatter. In `--openkb-wiki` mode, a non-empty body H1 satisfies the optional OKF `title` recommendation; a page with neither frontmatter `title` nor body H1 is still warned about. Missing `description` remains advisory.
+OpenWiki output is validated as an ordinary strict OKF v0.1 bundle plus this repository's producer contract, enforced by `scripts/validate_openwiki_bundle.py` on top of the generic validator:
 
-When validating an OpenKB wiki, use `--openkb-wiki`. That mode skips root `AGENTS.md` because it is OpenKB's wiki-conventions manual, and skips `sources/` and `reports/` because they are operational/evidence areas. It still validates `index.md`, `log.md`, `concepts/`, `entities/`, `summaries/`, `explorations/`, and hand-authored `tooling/` pages. Report genuine spec deviations instead of silently passing them.
+- the bundle-root `index.md` is the canonical front door and must route to an existing `quickstart.md`;
+- generated directory indexes are normalized deterministically during candidate mapping: the root `index.md` keeps only the `okf_version` declaration in frontmatter, and subdirectory `index.md` files carry no frontmatter (producer-typed index frontmatter is removed, bodies preserved);
+- `quickstart.md` and `INSTRUCTIONS.md` are non-reserved concept documents and therefore need valid frontmatter with a non-empty `type`;
+- every generated knowledge page must carry citations in a machine-checkable form (frontmatter `sources` or `## Citations` bullets with backticked staged paths), and the staged runner rejects citations that were not present in the immutable pre-run stage;
+- unknown `type` values and additional metadata are valid and must survive normalization and unrelated updates;
+- timestamps change only when the body changes.
 
-`--openkb-wiki` also applies OpenKB-convention checks on top of the spec: broken `[[wikilinks]]` are errors, and missing machine-managed `sources:` lists on `concepts/`/`entities/` pages are warnings. `explorations/` gets the same reality-over-ideal treatment as titles: OpenKB's own `query --save` writes only a `query:` frontmatter header with no `type` — a genuine deviation from hard rule 2 that the mode reports as a warning rather than silently passing or failing CI on native OpenKB output. Finding capture pages under `explorations/findings/` carry `type: Finding` (an unknown-but-tolerated type value) plus title/description/observed, so they conform fully; a page with neither `query:` nor `type:` is warned about. Without `--openkb-wiki`, strict conformance applies and a missing `type` stays an error everywhere. Finding pages must also be enumerated in the bundle-root `index.md` under `## Explorations` — same rationale as the tooling rule below: OKF navigation must enumerate the bundle. This does not contradict the spec's "tolerate broken cross-links" rule — that rule concerns standard Markdown links and consumer-side tolerance of partially written bundles. `[[wikilinks]]` are OpenKB's own convention, generated against a compile-time whitelist and repaired by `lint --fix`, so in an OpenKB-managed wiki a broken one always means damage (bad merge, hand edit, interrupted run); gating them is a producer-side quality bar, not an OKF conformance verdict. In all modes the validator additionally warns on unclosed code fences (truncation signal) and same-directory names that collapse to one slug (near-duplicates).
+The accepted repository producer gate is deliberately stronger than the base spec on links: all internal links must resolve deterministically before promotion. This is a producer quality rule, not a claim that broken links violate OKF. Deterministic checks establish structure and grounding, not semantic correctness — review changed pages against source evidence before promotion (see `references/openwiki-lifecycle.md`).
 
 ## Local validation command
 
 ```bash
-uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki
+uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .
 ```
 
-Use `--strict-warnings` only for local quality gates, not for OKF conformance.
+Validate the mapped staged candidate at `okf/.okf-build/<run-id>/candidate/wiki` before promotion and canonical `okf/wiki/` afterward.
 
 ## Tooling link policy
 
@@ -163,9 +164,9 @@ The bundle-root `index.md` is the exception, because OKF navigation must enumera
 * [Tooling](tooling/index.md) - User-scoped runtime/harness context, local by default. Project concept pages must not depend on it.
 ```
 
-Tooling pages are **local by default** (user-scoped, gitignored except the committed `tooling/index.md` navigation stub — git scope rules in `subagent-profile-adapter`'s tooling context policy). The root entry points at the committed stub, never at individual local pages, so the committed bundle and any committed-plus-local overlay are each a valid, navigable OKF bundle: the spec allows arbitrary subdirectories and index files in any directory, and committed content never links to local pages, so wikilink integrity holds on every clone.
+Tooling pages are **local by default** (user-scoped, gitignored except the committed `tooling/index.md` navigation stub — git scope rules in `subagent-profile-adapter`'s tooling context policy). The root entry points at the committed stub, never at individual local pages, so the committed bundle and any committed-plus-local overlay are each a valid, navigable OKF bundle: the spec allows arbitrary subdirectories and index files in any directory, and committed content never links to local pages, so link integrity holds on every clone.
 
-Because OpenKB defines an orphan as a page with neither incoming nor outgoing `[[wikilinks]]`, each local non-reserved tooling page must contain at least one valid outgoing wikilink to durable project knowledge. This preserves the local-by-default boundary while keeping structural lint clean; never solve it by enumerating ignored local pages in a committed index. Some OpenKB releases also include prior generated `wiki/reports/lint_*.md` files in orphan detection even though reports are operational and ignored. Treat only that exact report path as a tool-generated false positive; for a clean final report, preserve any needed evidence outside the wiki and remove stale ignored lint reports before the approved final lint run.
+Each local non-reserved tooling page must contain at least one outgoing standard relative Markdown link to durable project knowledge. This preserves the local-by-default boundary while keeping the bundle connected; never solve it by enumerating ignored local pages in a committed index.
 
 The root `index.md` and root `log.md` are reserved navigation/history files; linking or mentioning tooling there does not create a project-to-tooling dependency. Everywhere else the direction stays strict.
 

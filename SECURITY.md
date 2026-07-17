@@ -24,10 +24,10 @@ Please include:
 ## What's in scope
 
 The three product skills (`agent-ready-context`, `skill-creator`,
-`subagent-profile-adapter`) and their bundled scripts. Issues in the
-vendored `openkb`/`graphify` tool skills should generally be reported
-upstream to those projects, unless the issue is specifically in how this
-repository pins, vendors, or invokes them.
+`subagent-profile-adapter`) and their bundled scripts. Issues in upstream
+OpenWiki should generally be reported there, unless the issue is specifically
+in how this repository installs, configures, stages, validates, or invokes it.
+The same rule applies to any other upstream tool skill.
 
 ## Design background
 
@@ -36,6 +36,11 @@ pinned/integrity-checked tooling, explicit provider routing, data-flow
 disclosure before LLM calls — is documented in
 [README.md § Security and Privacy](README.md#security-and-privacy). Read
 that first; many "is this safe?" questions are already answered there.
+
+Vendor dependencies are never patched. Compatibility and policy adaptation
+belong in project-owned wrappers, and an upstream incompatibility that cannot
+be handled there is reported instead of hidden in a fork. OpenWiki state and
+credentials remain local under gitignored `okf/.openwiki/`.
 
 ## Response
 

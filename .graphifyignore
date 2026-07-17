@@ -1,5 +1,0 @@
-# Keep the compiled knowledge base out of the repo graph. The wiki is a map
-# of this repository, not part of the territory: mapping it feeds generated
-# pages back into the graph report that OpenKB re-ingests - a feedback loop
-# that never converges. Rationale: .agents/skills/agent-ready-context/references/workflow.md
-okf/

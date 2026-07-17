@@ -31,7 +31,7 @@ Keep `AGENTS.md` concise:
 
 - setup and test commands
 - repo-specific rules
-- where to find `okf/wiki/`, `graphify-out/`, and `.agents/skills/`
+- where to find `okf/wiki/` and `.agents/skills/`
 - security and contribution best practices
 - maintenance reminders
 
