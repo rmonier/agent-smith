@@ -147,6 +147,22 @@ def check(repo: Path) -> dict[str, Any]:
         ok, detail = run(cmd, repo, timeout=60)
         result["optional"][name] = {"ok": ok, "detail": detail}
 
+    pnpm_result = result["optional"]["pnpm"]
+    if pnpm_result["ok"]:
+        pnpm_major = None
+        try:
+            pnpm_major = int(pnpm_result["detail"].split(".", 1)[0])
+        except ValueError:
+            pass
+        if pnpm_major is not None and pnpm_major < 11:
+            result["notes"].append(
+                f"WARNING: pnpm {pnpm_result['detail']} is older than 11: OpenWiki 0.2.0 fails to start under pnpm's "
+                "default (isolated) node-linker on pnpm <11 (\"Cannot find package 'react'\" at startup, even "
+                "though react is a direct dependency). pnpm >=11 resolves it correctly with the default linker - "
+                "upgrade pnpm rather than switching node-linker modes, since a global node-linker change would "
+                "affect every other package's phantom-dependency protection on the machine, not just this one."
+            )
+
     check_openwiki_config(repo, result)
 
     companion_notes = {

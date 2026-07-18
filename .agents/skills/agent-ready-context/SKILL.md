@@ -98,13 +98,11 @@ Ask before installing. Present each missing tool with its exact package name, in
   never with elevation or PATH/profile edits. The Node version is the agent's
   choice as long as it meets upstream OpenWiki's documented minimum; no pin
   file is required.
-- OpenWiki is installed globally at user scope from an exact pin that provides
-  OKF bundle output. Prefer a released registry version installed with the
-  environment's normal package mechanism — no source build; the
-  commit-pin/verified-checkout path below exists only for environments that
-  must pin an unreleased commit. The consuming agent selects the exact pin and
-  records it in the target repository's `AGENTS.md`; candidate selection and the
-  audit checklist live in `references/dependencies.md`.
+- OpenWiki is installed globally at user scope from an exact released,
+  OKF-capable pin, with the environment's normal package mechanism — no
+  source build. The consuming agent selects the exact pin and records it in
+  the target repository's `AGENTS.md`; candidate selection and the audit
+  checklist live in `references/dependencies.md`.
 - `markitdown` is installed at user scope from an exact pin via
   `uv tool install` — no source-build fallback, unlike OpenWiki. Optional, but
   first-class: the default source-material converter for external-evidence
@@ -115,18 +113,20 @@ Ask before installing. Present each missing tool with its exact package name, in
 
 ```bash
 # hard prerequisites (consent-first, environment's normal mechanism)
-#   git, uv  — as on any repository
-#   fnm      — user-scoped Node manager for the producer path
+#   git, uv   — as on any repository
+#   fnm       — user-scoped Node manager for the producer path
+#   pnpm >=11 — OpenWiki 0.2.0 fails to start under pnpm's default (isolated)
+#               node-linker on pnpm <11 ("Cannot find package 'react'" at
+#               startup, even though react is a direct dependency); pnpm >=11
+#               resolves it correctly with the default linker. check_prereqs.py
+#               flags an older pnpm; upgrade pnpm itself rather than switching
+#               node-linker modes, which would affect every other package's
+#               phantom-dependency protection on the machine, not just this one.
 
 fnm install <node-version-meeting-upstream-minimum>
 
 # OpenWiki: the released, OKF-capable pin from the configured registry
 pnpm add --global openwiki@<exact-pinned-version>
-
-# Fallback only, to pin an unreleased commit (see references/dependencies.md):
-#   verified checkout under okf/.openwiki/vendor/openwiki/, then
-#   corepack pnpm install --frozen-lockfile   # inside the checkout, via fnm exec
-#   pnpm add --global <verified-source-dir>   # non-admin user-global exposure
 
 # Optional but first-class: markitdown, the default external-evidence
 # converter once installed (references/external-docs.md)
@@ -137,7 +137,7 @@ If an exact pinned Python helper itself requires an exact prerelease dependency 
 
 Provenance quick reference (full table and rules in `references/dependencies.md`):
 
-- `openwiki` (npm package) - upstream source: <https://github.com/langchain-ai/openwiki>, MIT, Node.js >=20.
+- `openwiki` (npm package) - upstream source: <https://github.com/langchain-ai/openwiki>, MIT, Node.js >=22.
 - `fnm` - upstream source: <https://github.com/Schniz/fnm>, install per its official releases.
 - `uv` - upstream source: <https://github.com/astral-sh/uv>, install per <https://docs.astral.sh/uv/getting-started/installation/>.
 - `markitdown` (PyPI package) - upstream source: <https://github.com/microsoft/markitdown>, MIT, optional but first-class: the default source-material converter for external-evidence documents and fetched URLs once installed (`references/external-docs.md`).
@@ -168,7 +168,7 @@ okf/.openwiki/
 .env
 ```
 
-Usually commit `okf/wiki/` (including `index.md`, `quickstart.md`, and `INSTRUCTIONS.md`) except user-scoped `tooling/` pages (only the `tooling/index.md` navigation stub is committed), `okf/external/`, `AGENTS.md`, and `.agents/skills/`. Keep `okf/.okf-build/` and `okf/.openwiki/` contents (OAuth state, provider config, the vendor checkout, update state) local unless the user explicitly chooses otherwise; never commit prompts containing private source or local evaluation artifacts.
+Usually commit `okf/wiki/` (including `index.md`, `quickstart.md`, and `INSTRUCTIONS.md`) except user-scoped `tooling/` pages (only the `tooling/index.md` navigation stub is committed), `okf/external/`, `AGENTS.md`, and `.agents/skills/`. Keep `okf/.okf-build/` and `okf/.openwiki/` contents (OAuth state, provider config, update state) local unless the user explicitly chooses otherwise; never commit prompts containing private source or local evaluation artifacts.
 
 ## Commands
 
@@ -202,6 +202,12 @@ argv after `--` is the literal stock OpenWiki command; first build uses
 
 ```bash
 uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo . --run-id <id> --execute -- openwiki code --init --print "Read openwiki/INSTRUCTIONS.md first and treat it as the user-authored scope contract. Preserve it byte-for-byte. Document only the staged repository; write only under openwiki/."
+```
+
+If the selected provider is an OAuth route (see `references/openwiki-providers.md`) and no session exists yet, that same `--execute` call needs a real interactive terminal for the first run. After disclosure and consent, spawn one with the generic, cross-platform launcher (never OS-input simulation):
+
+```bash
+uv run .agents/skills/agent-ready-context/scripts/launch_visible_terminal.py --cwd . --env HOME=<credential-home> --env USERPROFILE=<credential-home> --env OPENWIKI_PROVIDER=<selected-route> -- <the same run_openwiki_staged.py --execute command above>
 ```
 
 Review the run's `review.diff` and candidate pages, then promote the reviewed candidate transactionally:

@@ -66,7 +66,7 @@ Every installable dependency of this pipeline has a single authoritative **upstr
 | --- | --- | --- | --- | --- |
 | `uv` | `uv` (installer script / OS packages) | <https://github.com/astral-sh/uv> | MIT/Apache-2.0 | standalone binary |
 | `fnm` | `fnm` (official release assets / OS packages) | <https://github.com/Schniz/fnm> | GPL-3.0 | standalone binary |
-| `openwiki` | `openwiki` (npm package) | <https://github.com/langchain-ai/openwiki> | MIT | Node.js >=20 |
+| `openwiki` | `openwiki` (npm package) | <https://github.com/langchain-ai/openwiki> | MIT | Node.js >=22 |
 | `markitdown` | `markitdown` (PyPI; extras per required formats, e.g. `[all]`) | <https://github.com/microsoft/markitdown> | MIT | Python, optional — needed only for external-document preparation |
 
 markitdown follows the standard Python-helper pin flow already documented below: exact version, trust-on-first-use hash via the `pip download` block, and a telemetry check at pin time. The existing example rows and the `--prerelease=allow` rule already cover the mechanics; nothing markitdown-specific is added here.
@@ -89,12 +89,9 @@ Rules:
 
 ## Choosing the OpenWiki pin
 
-The pin must be an exact released version or a full 40-character immutable commit that provides OKF bundle output. A branch name, PR number, or mutable archive URL is never a pin. Selection procedure:
+The pin must be an exact released version that provides OKF bundle output, installed user-globally from the configured registry (`pnpm add --global openwiki@X.Y.Z`) — no source build. A branch name, PR number, or mutable archive URL is never a pin. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
 
-1. **Prefer a released version whose release notes include OKF support; install it user-globally from the configured registry (`pnpm add --global openwiki@X.Y.Z`).** This is the normal path — no source build. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
-2. Only when no such release exists, inspect upstream's OKF work (search its issues and pull requests for "OKF") and select one immutable commit with the user. Any interim commit pin is a stopgap the user must explicitly approve, re-evaluated as soon as a suitable release exists.
-3. For a commit pin (fallback only), build from source without touching vendor bytes: acquire the reviewed immutable commit into ignored `okf/.openwiki/vendor/openwiki/`, verify the commit and a clean tree, remove usable push remotes, use the pinned Node's bundled Corepack to provide the exact pnpm from upstream's `packageManager` field, run `pnpm install --frozen-lockfile`, run upstream's own test suite, then expose the tool with `pnpm add --global <verified-source-dir>` in the normal non-admin user-global scope. The resulting link must resolve exactly to the clean checkout; retain the checkout and its installed state.
-4. Before accepting any candidate, audit: OKF normalization and reserved-file behavior, no-op/timestamp behavior, manual-edit preservation, provider routing and credential storage, tracing/telemetry defaults (OpenWiki ships opt-out PostHog run telemetry — confirm the `OPENWIKI_TELEMETRY_DISABLED`/`DO_NOT_TRACK` kill-switches gate all senders), filesystem scope, and package lifecycle scripts.
+Before accepting any candidate, audit: OKF normalization and reserved-file behavior, no-op/timestamp behavior, manual-edit preservation, provider routing and credential storage, tracing/telemetry defaults (OpenWiki ships opt-out PostHog run telemetry — confirm the `OPENWIKI_TELEMETRY_DISABLED`/`DO_NOT_TRACK` kill-switches gate all senders), filesystem scope, package lifecycle scripts, and whether the CLI actually starts under the locally installed pnpm.
 
 Authentication is separate from installation. OpenWiki owns its provider credentials under ignored `okf/.openwiki/`; see `references/openwiki-providers.md`.
 

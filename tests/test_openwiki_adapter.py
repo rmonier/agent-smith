@@ -27,6 +27,7 @@ SCRIPTS = ROOT / ".agents" / "skills" / "agent-ready-context" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import check_prereqs  # noqa: E402
+import launch_visible_terminal as terminal_launcher  # noqa: E402
 import prepare_external_evidence as external_evidence  # noqa: E402
 import run_openwiki_staged as runner  # noqa: E402
 import validate_openwiki_bundle as openwiki_validator  # noqa: E402
@@ -525,6 +526,187 @@ class ExternalEvidenceTests(WorkspaceCase):
                     with mock.patch.object(sys, "argv", argv):
                         self.assertEqual(external_evidence.main(), 0)
         self.assertEqual((out_a / "sample.md").read_bytes(), (out_b / "sample.md").read_bytes())
+
+
+class VisibleTerminalLauncherTests(unittest.TestCase):
+    def test_parse_env_overrides_accepts_key_value_pairs(self) -> None:
+        self.assertEqual(
+            terminal_launcher.parse_env_overrides(["A=1", "B=two words"]),
+            {"A": "1", "B": "two words"},
+        )
+        self.assertEqual(terminal_launcher.parse_env_overrides([]), {})
+
+    def test_parse_env_overrides_rejects_missing_equals_or_empty_key(self) -> None:
+        with self.assertRaises(ValueError):
+            terminal_launcher.parse_env_overrides(["NOEQUALS"])
+        with self.assertRaises(ValueError):
+            terminal_launcher.parse_env_overrides(["=value"])
+
+    def test_windows_launch_uses_new_console_and_pauses_after(self) -> None:
+        with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+            result = terminal_launcher.launch_windows(
+                ["openwiki", "code", "--init"], Path("C:/repo"), {"HOME": "C:/repo/okf"}
+            )
+        self.assertTrue(result)
+        popen.assert_called_once()
+        args, kwargs = popen.call_args
+        self.assertEqual(args[0][0], "cmd.exe")
+        self.assertIn("openwiki code --init", args[0][2])
+        self.assertIn("pause", args[0][2])
+        self.assertEqual(kwargs["creationflags"], terminal_launcher.subprocess.CREATE_NEW_CONSOLE)
+        self.assertEqual(kwargs["env"]["HOME"], "C:/repo/okf")
+
+    def test_macos_launch_returns_false_without_osascript(self) -> None:
+        with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_macos(["echo", "hi"], Path("/repo"), {})
+        self.assertFalse(result)
+        popen.assert_not_called()
+
+    def test_macos_launch_targets_terminal_app_via_osascript(self) -> None:
+        with mock.patch.object(terminal_launcher.shutil, "which", return_value="/usr/bin/osascript"):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_macos(
+                    ["openwiki", "code", "--init"], Path("/repo"), {"OPENWIKI_PROVIDER": "openai-chatgpt"}
+                )
+        self.assertTrue(result)
+        args, _ = popen.call_args
+        self.assertEqual(args[0][0], "osascript")
+        script = args[0][2]
+        self.assertIn("Terminal", script)
+        self.assertIn("OPENWIKI_PROVIDER", script)
+
+    def test_linux_launch_prefers_xdg_terminal_exec_when_present(self) -> None:
+        def which(name: str) -> str | None:
+            if name == terminal_launcher._XDG_TERMINAL_EXEC:
+                return "/usr/bin/xdg-terminal-exec"
+            if name == "xterm":
+                return "/usr/bin/xterm"
+            return None
+
+        with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_linux(
+                    ["openwiki", "code", "--init"], Path("/repo"), {}, {}
+                )
+        self.assertTrue(result)
+        args, _ = popen.call_args
+        self.assertEqual(args[0][0], "/usr/bin/xdg-terminal-exec")
+        # xdg-terminal-exec takes the command directly, no -e/-- prefix flag.
+        self.assertNotIn("-e", args[0])
+        self.assertNotIn("xterm", args[0][0])
+
+    def test_linux_launch_tries_terminals_in_order_and_stops_at_first_found(self) -> None:
+        def which(name: str) -> str | None:
+            return "/usr/bin/xterm" if name == "xterm" else None
+
+        with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_linux(
+                    ["openwiki", "code", "--init"], Path("/repo"), {}, {}
+                )
+        self.assertTrue(result)
+        args, _ = popen.call_args
+        self.assertIn("/usr/bin/xterm", args[0])
+        self.assertIn("-e", args[0])
+
+    def test_linux_launch_returns_false_when_no_terminal_found(self) -> None:
+        with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_linux(["echo", "hi"], Path("/repo"), {}, {})
+        self.assertFalse(result)
+        popen.assert_not_called()
+
+    def test_main_exits_3_with_no_command(self) -> None:
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", ["launch_visible_terminal.py"]):
+            with contextlib.redirect_stderr(stderr):
+                code = terminal_launcher.main()
+        self.assertEqual(code, 3)
+
+    def test_main_exits_2_when_no_mechanism_found(self) -> None:
+        argv = ["launch_visible_terminal.py", "--", "echo", "hi"]
+        stderr = io.StringIO()
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Plan9"):
+            with mock.patch.object(sys, "argv", argv):
+                with contextlib.redirect_stderr(stderr):
+                    code = terminal_launcher.main()
+        self.assertEqual(code, 2)
+        self.assertIn("echo hi", stderr.getvalue())
+
+    def test_main_dispatches_to_windows_launcher_and_reports_success(self) -> None:
+        argv = ["launch_visible_terminal.py", "--env", "HOME=/repo/okf", "--", "openwiki", "code", "--init"]
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher, "launch_windows", return_value=True) as launch:
+                with mock.patch.object(sys, "argv", argv):
+                    code = terminal_launcher.main()
+        self.assertEqual(code, 0)
+        launch.assert_called_once()
+        _, _, env = launch.call_args[0]
+        self.assertEqual(env["HOME"], "/repo/okf")
+
+    def test_detect_mode_reports_windows_mechanism_without_launching(self) -> None:
+        argv = ["launch_visible_terminal.py", "--detect"]
+        stdout = io.StringIO()
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stdout(stdout):
+                        code = terminal_launcher.main()
+        self.assertEqual(code, 0)
+        self.assertIn("cmd.exe", stdout.getvalue())
+        popen.assert_not_called()
+
+    def test_detect_mode_never_requires_a_command(self) -> None:
+        # --detect alone, no "-- <command>", must not hit the "no command given" error.
+        argv = ["launch_visible_terminal.py", "--detect"]
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(sys, "argv", argv):
+                code = terminal_launcher.main()
+        self.assertEqual(code, 0)
+
+    def test_detect_mode_exits_2_when_nothing_found(self) -> None:
+        argv = ["launch_visible_terminal.py", "--detect"]
+        stderr = io.StringIO()
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Linux"):
+            with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = terminal_launcher.main()
+        self.assertEqual(code, 2)
+
+    def test_detect_then_launch_agree_on_the_same_mechanism(self) -> None:
+        # The whole point of --detect: what it reports must be what actually gets used.
+        def which(name: str) -> str | None:
+            return "/usr/bin/gnome-terminal" if name == "gnome-terminal" else None
+
+        with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+            description = terminal_launcher.detect("Linux")
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                terminal_launcher.launch_linux(["openwiki"], Path("/repo"), {}, {})
+        self.assertEqual(description, "gnome-terminal")
+        args, _ = popen.call_args
+        self.assertEqual(args[0][0], "/usr/bin/gnome-terminal")
+
+    def test_detect_never_calls_popen_on_any_platform(self) -> None:
+        # Hard structural guarantee, not just a code-review claim: detection
+        # must be impossible to accidentally wire up to actually launching
+        # anything, on any of the three platforms this script supports, even
+        # after future edits to this file.
+        def popen_must_not_be_called(*args: object, **kwargs: object) -> None:
+            raise AssertionError(f"Popen must never be called during detect(); got args={args} kwargs={kwargs}")
+
+        def which(name: str) -> str | None:
+            # Report every known binary as present, so detection takes the
+            # "found something" branch on each platform - that branch is
+            # exactly where an accidental Popen call would be most likely.
+            return f"/usr/bin/{name}"
+
+        with mock.patch.object(terminal_launcher.subprocess, "Popen", side_effect=popen_must_not_be_called):
+            with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+                for system in ("Windows", "Darwin", "Linux"):
+                    result = terminal_launcher.detect(system)
+                    self.assertIsNotNone(result, f"expected a mechanism to be found for {system}")
 
 
 class PrerequisiteTests(unittest.TestCase):

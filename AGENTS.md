@@ -39,7 +39,7 @@ Use these context sources in this order:
 - Validate changed skills with `uv run .agents/skills/skill-creator/scripts/quick_validate.py .agents/skills/<skill-name>`.
 - The repo knowledge tooling is already approved and pinned for this workspace; do not install or upgrade it without a new user approval:
   - OpenWiki (pinned below) provides the `openwiki` CLI (source: <https://github.com/langchain-ai/openwiki>).
-  - The producer path additionally needs user-scoped `fnm` with a Node.js runtime meeting upstream's minimum (Node.js >= 20); like Python under uv, the exact Node version is the agent's discretion and carries no tracked pin file.
+  - The producer path additionally needs user-scoped `fnm` with a Node.js runtime meeting upstream's minimum (Node.js >= 22); like Python under uv, the exact Node version is the agent's discretion and carries no tracked pin file.
   - markitdown (pinned below) provides local document-to-Markdown conversion for `okf/external/` evidence prep (source: <https://github.com/microsoft/markitdown>); optional, needed only when preparing local PDF/Office/HTML evidence.
 - Installs go through the package index configured in this environment (corporate mirrors included); do not bypass it.
 - Trust-on-first-use pin record. A mismatch for the same pin and source is a supply-chain red flag: stop and report, never silently re-pin.

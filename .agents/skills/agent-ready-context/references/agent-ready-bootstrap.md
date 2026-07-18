@@ -40,8 +40,6 @@ pnpm add --global openwiki@<exact-pinned-version>     # released OKF-capable pin
 uv tool install '<python-helper>==<pinned-version>'   # e.g. a pinned markitdown for okf/external/ evidence prep
 ```
 
-The released registry version is the normal path. Only to pin an unreleased commit, build from the verified checkout instead of the registry (see `references/dependencies.md`).
-
 ## Suggested command sequence
 
 ```bash
@@ -96,7 +94,7 @@ Usually commit:
 Usually do not commit:
 
 - `okf/.okf-build/`
-- `okf/.openwiki/` contents (credential state, update state, vendor checkout)
+- `okf/.openwiki/` contents (credential state, update state)
 - provider secrets
 - local evaluation artifacts or prompts containing private source
 
