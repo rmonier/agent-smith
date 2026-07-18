@@ -40,14 +40,17 @@ Use these context sources in this order:
 - The repo knowledge tooling is already approved and pinned for this workspace; do not install or upgrade it without a new user approval:
   - OpenWiki (pinned below) provides the `openwiki` CLI (source: <https://github.com/langchain-ai/openwiki>).
   - The producer path additionally needs user-scoped `fnm` with a Node.js runtime meeting upstream's minimum (Node.js >= 20); like Python under uv, the exact Node version is the agent's discretion and carries no tracked pin file.
+  - markitdown (pinned below) provides local document-to-Markdown conversion for `okf/external/` evidence prep (source: <https://github.com/microsoft/markitdown>); optional, needed only when preparing local PDF/Office/HTML evidence.
 - Installs go through the package index configured in this environment (corporate mirrors included); do not bypass it.
 - Trust-on-first-use pin record. A mismatch for the same pin and source is a supply-chain red flag: stop and report, never silently re-pin.
 
 | Tool | Pinned version | Integrity | Source | Recorded |
 | --- | --- | --- | --- | --- |
 | OpenWiki | npm package `openwiki` `0.2.0` | tarball `sha512:hLop7FDz4zwj7z5VCdXhyY0yJxYVOKtVrBZJj1cSkiMN8nbr1ywm9F6gDxP59kWkuaCs39DCU9QpyzxL7grxnw==` | configured npm registry (`github.com/langchain-ai/openwiki`) | `2026-07-17` |
+| markitdown | PyPI package `markitdown[all]` `0.1.6` | wheel `sha256:07b2d5bf87b5c53e13a9f2fdc440df8ccc85e26f40c1e557781727b700049775` | configured Python index (`github.com/microsoft/markitdown`) | `2026-07-18` |
 
 - OpenWiki ships opt-out anonymous CLI run telemetry (PostHog; event-level command/outcome/error-category and setup provider/connector names, never repository contents, paths, prompts, model ids, or IPs). The staged runner exports `OPENWIKI_TELEMETRY_DISABLED=1` and `DO_NOT_TRACK=1` by default, so runs stay silent unless the user opts in.
+- markitdown ships no telemetry: verified against upstream docs/PyPI metadata and a source-string scan of the installed package (`telemetry`, `analytics`, `posthog`, `segment`, `mixpanel`, `amplitude` — no matches) on `2026-07-18`. Local-file conversion never touches the network — verified by reading the installed package source (`_markitdown.py`), not just docs: its HTTP session only activates on the URI-conversion code path, which local paths never reach. Two verified exceptions, both handled explicitly by `prepare_external_evidence.py`: YouTube URLs are passed through with a printed disclosure (markitdown fetches the transcript directly, no local-file equivalent exists); audio sources (`.wav`/`.mp3`/`.m4a`/`.mp4`) are rejected outright, because markitdown's transcription silently calls the Google Web Speech API with the actual audio content and no opt-out when the `[audio-transcription]`/`[all]` extras are installed.
 - Update a pin only after the user reviews the upstream release notes and confirms; record the new version and its integrity here.
 - OpenWiki provider policy: this file stays LLM-vendor-agnostic. The model/provider for this wiki is configured in OpenWiki's local state under ignored `okf/.openwiki/`; choose or change it per `.agents/skills/agent-ready-context/references/openwiki-providers.md`, and never write API keys or other credentials into the repo. Before any provider-backed run, disclose that staged repository content will be sent to the configured provider.
 

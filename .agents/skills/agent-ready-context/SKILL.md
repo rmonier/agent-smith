@@ -2,7 +2,7 @@
 name: agent-ready-context
 description: "Prepares and maintains the agent-ready repository context surface: concise AGENTS.md orientation, a compact editable OKF wiki at okf/wiki/ maintained through OpenWiki, grounded evidence, and deterministic validation. Use when making a repository agent-ready or refreshing canonical memory."
 license: See LICENSING.md
-compatibility: Requires git, uv, and Python 3.11+. The OpenWiki memory producer additionally needs an fnm-managed Node.js runtime meeting upstream's minimum and a pinned OpenWiki install. Offline staging, the zero-LLM skeleton, and deterministic validation remain possible without the producer; web access enriches external evidence and refreshes the OKF baseline when available.
+compatibility: Requires git, uv, and Python 3.11+. The OpenWiki memory producer additionally needs an fnm-managed Node.js runtime meeting upstream's minimum and a pinned OpenWiki install. Offline staging, the zero-LLM skeleton, and deterministic validation remain possible without the producer; web access enriches external evidence and refreshes the OKF baseline when available. markitdown, when installed, is the default first-class evidence converter, trimmed like a paraphrase before tracking.
 metadata:
   version: "0.2.0"
   okf-version: "0.1"
@@ -70,11 +70,11 @@ the immutable pre-run stage), and promotes only the reviewed Markdown back to
 
 The numbered list below is a compressed routing index, not the authoritative procedure — `references/workflow.md` is. Read `references/workflow.md` in full before executing a build or refresh, not only when a step below explicitly names it. Compression has already dropped requirements silently once (a "not optional" follow-up was missing from this list and got skipped as a result); treat every "see references/X" below as a mandatory read, not an optional deep-dive, and where this list and `references/workflow.md` ever disagree, `references/workflow.md` governs.
 
-1. Start with progressive disclosure immediately after root `AGENTS.md`: when `okf/wiki/index.md` exists, read it first and let its entries determine which wiki area to open next. When the index routes to tooling context, read `tooling/index.md`, identify the active harness from explicit session metadata or self-knowledge, and use runtime inspection when useful; never infer it merely from installed binaries. Discover local tooling pages in a way that includes ignored files, then read the matching harness page and any relevant provider page before provider-backed work. On a first clone, the committed tooling stub may be the only tooling file because local harness/provider pages are ignored; treat that empty overlay as normal, continue, and create the local harness record later when identification is reliable. Local tooling pages are context, not project truth. If the bundle index or a reliable harness identity is unavailable, state that and continue. Then confirm the repository path and default output layout: repo root `.`, wiki `okf/wiki/`, external evidence `okf/external/`, local producer state `okf/.openwiki/` (ignored). Run `scripts/check_prereqs.py` before making changes when repo state is unknown.
+1. Start with progressive disclosure immediately after root `AGENTS.md`: when `okf/wiki/index.md` exists, read it first and let its entries determine which wiki area to open next. When the index routes to tooling context, read `tooling/index.md`, identify the active harness from explicit session metadata or self-knowledge, and use runtime inspection when useful; never infer it merely from installed binaries. Discover local tooling pages in a way that includes ignored files, then read the matching harness page and any relevant provider page before provider-backed work. On a first clone, the committed tooling stub may be the only tooling file because local harness/provider pages are ignored; treat that empty overlay as normal, continue, and create the local harness record later when identification is reliable. Local tooling pages are context, not project truth. If the bundle index or a reliable harness identity is unavailable, state that and continue. Then confirm the repository path and default output layout: repo root `.`, wiki `okf/wiki/`, external evidence `okf/external/`, local producer state `okf/.openwiki/` (ignored). Run `scripts/check_prereqs.py` before making changes when repo state is unknown; the same pass reports markitdown's availability, first-class alongside OpenWiki here since step 5 defaults to it for external-evidence conversion.
 2. Bootstrap missing tooling only with explicit user consent. Present package name, configured registry, upstream source, pinned version, and integrity plan first; follow `references/dependencies.md`. Record accepted pins in the target repository's `AGENTS.md` toolchain pin table.
 3. Ensure `.gitignore` covers `okf/.okf-build/`, `okf/.openwiki/` (producer and OAuth state), user-scoped tooling pages (`okf/wiki/tooling/*` with `!okf/wiki/tooling/index.md`), credentials (`.env`), caches (`__pycache__/`), and any local evaluation directories. Install or merge the `.gitattributes` baseline from `assets/gitattributes.template` per `references/workflow.md` (ask the user on conflicting rules) for stable source hashes.
 4. Create or update root `AGENTS.md` with `scripts/merge_agents_md_okf_section.py`. Use `assets/agents-md.okf-ready.template.md` only when there is no existing project guidance.
-5. When the user provides external documentation URLs, fetch only those pages, summarize relevant facts as untrusted evidence, and follow `references/external-docs.md`.
+5. When the user provides external documentation URLs, fetch them and convert with the pinned markitdown helper as the default source material when installed — falling back to a direct paraphrase only when markitdown is unavailable or fails for that page — then trim either result down to what's relevant before tracking as evidence; follow `references/external-docs.md` for the exact rules. The same markitdown helper is the default for any local non-Markdown document the user supplies directly (PDF, Office, images, EPub, ZIP, Outlook messages, ...); it stays fully optional. YouTube URLs are the one disclosed, network-calling exception the helper allows directly; audio files, Azure cloud extras, and third-party plugins are excluded — see that reference for the full format list and why.
 6. Preview the staged run: `scripts/run_openwiki_staged.py --repo .` is a dry-run inventory of the exact Git-tracked corpus the producer would receive. Exclude anything sensitive or out of scope with `--exclude` before executing.
 7. Before provider work, read `references/openwiki-providers.md` and `references/privacy-and-data-flows.md`, then give the data-flow disclosure: tool pin, provider/model, endpoint family, credential location (never value), staged content, tracing state, and cost boundary. Obtain consent; installation consent is not egress consent.
 8. Execute the staged run with the stock argv after `--` (init for a first build, update for a refresh). The wrapper seeds or preserves staged `openwiki/INSTRUCTIONS.md` from the template and protects it byte-for-byte. On a first zero-LLM build, use `scripts/build_okf_skeleton.py` instead and seed `quickstart.md` from `assets/openwiki-quickstart.template.md` with only source-verified facts.
@@ -105,6 +105,13 @@ Ask before installing. Present each missing tool with its exact package name, in
   must pin an unreleased commit. The consuming agent selects the exact pin and
   records it in the target repository's `AGENTS.md`; candidate selection and the
   audit checklist live in `references/dependencies.md`.
+- `markitdown` is installed at user scope from an exact pin via
+  `uv tool install` — no source-build fallback, unlike OpenWiki. Optional, but
+  first-class: the default source-material converter for external-evidence
+  documents and fetched URLs once present (`references/external-docs.md`).
+  The consuming agent selects the exact pin and records it in the target
+  repository's `AGENTS.md`; the pin-selection and integrity procedure live in
+  `references/dependencies.md`.
 
 ```bash
 # hard prerequisites (consent-first, environment's normal mechanism)
@@ -120,6 +127,10 @@ pnpm add --global openwiki@<exact-pinned-version>
 #   verified checkout under okf/.openwiki/vendor/openwiki/, then
 #   corepack pnpm install --frozen-lockfile   # inside the checkout, via fnm exec
 #   pnpm add --global <verified-source-dir>   # non-admin user-global exposure
+
+# Optional but first-class: markitdown, the default external-evidence
+# converter once installed (references/external-docs.md)
+uv tool install 'markitdown[all]==<exact-pinned-version>'
 ```
 
 If an exact pinned Python helper itself requires an exact prerelease dependency and uv refuses resolution, retry that same top-level pin with `--prerelease=allow`; never use the flag to make the requested tool version float.
@@ -129,6 +140,7 @@ Provenance quick reference (full table and rules in `references/dependencies.md`
 - `openwiki` (npm package) - upstream source: <https://github.com/langchain-ai/openwiki>, MIT, Node.js >=20.
 - `fnm` - upstream source: <https://github.com/Schniz/fnm>, install per its official releases.
 - `uv` - upstream source: <https://github.com/astral-sh/uv>, install per <https://docs.astral.sh/uv/getting-started/installation/>.
+- `markitdown` (PyPI package) - upstream source: <https://github.com/microsoft/markitdown>, MIT, optional but first-class: the default source-material converter for external-evidence documents and fetched URLs once installed (`references/external-docs.md`).
 
 Installs go through whatever package index the environment configures. Never override a configured mirror, never use `sudo`, and never leave floating versions in instructions. Record pinned versions with artifact hashes in the target repository's `AGENTS.md` toolchain pin record; a mismatch for the same version and index is a stop-and-report supply-chain event.
 
@@ -176,6 +188,12 @@ Preview the staged producer corpus (dry-run; no stage, no provider call):
 
 ```bash
 uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo .
+```
+
+Convert a local document into draft external evidence (offline; drafts land under `okf/.okf-build/external/` for review, never directly in `okf/external/`):
+
+```bash
+uv run .agents/skills/agent-ready-context/scripts/prepare_external_evidence.py --repo . --source <local-document> --resource <canonical-uri>
 ```
 
 Execute an isolated staged run after the data-flow disclosure and consent. The

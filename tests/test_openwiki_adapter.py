@@ -9,8 +9,10 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -25,6 +27,7 @@ SCRIPTS = ROOT / ".agents" / "skills" / "agent-ready-context" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import check_prereqs  # noqa: E402
+import prepare_external_evidence as external_evidence  # noqa: E402
 import run_openwiki_staged as runner  # noqa: E402
 import validate_openwiki_bundle as openwiki_validator  # noqa: E402
 
@@ -367,6 +370,163 @@ class ValidationAndPromotionTests(WorkspaceCase):
             runner._literal_openwiki_command([sys.executable, "stub.py"])
 
 
+class ExternalEvidenceTests(WorkspaceCase):
+    def _argv(self, *extra: str) -> list[str]:
+        return ["prepare_external_evidence.py", "--repo", str(self.repo), *extra]
+
+    @staticmethod
+    def _mock_conversion(body: str):
+        def fake_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(cmd, 0, stdout=body, stderr="")
+
+        return fake_run
+
+    def test_url_shaped_source_is_rejected(self) -> None:
+        argv = self._argv("--source", "https://example.com/doc.pdf", "--resource", "https://example.com/doc.pdf")
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stderr(stderr):
+                code = external_evidence.main()
+        self.assertEqual(code, 2)
+        self.assertIn("URL", stderr.getvalue())
+        self.assertFalse((self.repo / "okf/.okf-build/external").exists())
+
+    def test_audio_source_is_rejected_even_without_cli(self) -> None:
+        source = self.repo / "clip.mp3"
+        source.write_bytes(b"fake-mp3-bytes")
+        argv = self._argv("--source", str(source), "--resource", "local-fixture:clip.mp3")
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stderr(stderr):
+                code = external_evidence.main()
+        self.assertEqual(code, 2)
+        self.assertIn("Google Web Speech", stderr.getvalue())
+        self.assertFalse((self.repo / "okf/.okf-build/external").exists())
+
+    def test_youtube_url_is_allowed_discloses_network_call_and_omits_source_hash(self) -> None:
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--resource", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--retrieved", "2026-07-18",
+            "--out", str(out_dir),
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(
+                external_evidence.subprocess, "run", side_effect=self._mock_conversion("Transcript text.\n")
+            ):
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = external_evidence.main()
+        self.assertEqual(code, 0)
+        self.assertIn("YouTube URL", stderr.getvalue())
+        self.assertIn("network call", stderr.getvalue())
+
+        # topic defaults to the slugified video id
+        target = out_dir / f"{external_evidence.slugify('dQw4w9WgXcQ')}.md"
+        text = target.read_bytes().decode("utf-8")
+        self.assertNotIn("x-source-sha256", text)
+        self.assertIn('x-converter: "markitdown"', text)
+        self.assertIn("Transcript text.\n", text)
+
+    def test_non_youtube_url_still_rejected_alongside_youtube_source(self) -> None:
+        self.assertFalse(external_evidence.is_youtube_url("https://example.com/watch?v=abc"))
+        self.assertTrue(external_evidence.is_youtube_url("https://youtu.be/abc123"))
+        self.assertTrue(external_evidence.is_youtube_url("https://www.youtube.com/watch?v=abc123"))
+        self.assertTrue(external_evidence.is_youtube_url("https://music.youtube.com/watch?v=abc123"))
+
+    def test_missing_cli_hints_install_and_writes_nothing(self) -> None:
+        source = self.repo / "doc.txt"
+        source.write_text("hello", encoding="utf-8")
+        argv = self._argv("--source", str(source), "--resource", "https://example.com/doc")
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value=None):
+            with mock.patch.object(sys, "argv", argv):
+                with contextlib.redirect_stderr(stderr):
+                    code = external_evidence.main()
+        self.assertEqual(code, 3)
+        self.assertIn("uv tool install", stderr.getvalue())
+        self.assertFalse((self.repo / "okf/.okf-build/external").exists())
+
+    def test_out_inside_okf_external_is_refused(self) -> None:
+        source = self.repo / "doc.txt"
+        source.write_text("hello", encoding="utf-8")
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc",
+            "--out", "okf/external",
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stderr(stderr):
+                code = external_evidence.main()
+        self.assertEqual(code, 2)
+        self.assertIn("okf/external", stderr.getvalue())
+        self.assertFalse((self.repo / "okf/external").exists())
+
+    def test_successful_conversion_writes_expected_frontmatter_and_lf_newlines(self) -> None:
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--topic", "sample-doc",
+            "--trust", "official-docs",
+            "--retrieved", "2026-07-18",
+            "--out", str(out_dir),
+        )
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(
+                external_evidence.subprocess, "run", side_effect=self._mock_conversion("# Sample\n\nBody text.\n")
+            ):
+                with mock.patch.object(sys, "argv", argv):
+                    code = external_evidence.main()
+        self.assertEqual(code, 0)
+
+        raw = (out_dir / "sample-doc.md").read_bytes()
+        self.assertNotIn(b"\r\n", raw)
+        text = raw.decode("utf-8")
+        match = re.match(r"^---\n(.*?)\n---\n\n(.*)$", text, re.DOTALL)
+        self.assertIsNotNone(match)
+        front, body = match.group(1), match.group(2)
+        keys = [line.split(":", 1)[0] for line in front.splitlines()]
+        self.assertEqual(
+            keys,
+            ["type", "title", "description", "resource", "retrieved", "trust", "x-source-sha256", "x-converter"],
+        )
+        expected_sha = hashlib.sha256(source.read_bytes()).hexdigest()
+        self.assertIn('type: "external-evidence"', front)
+        self.assertIn('resource: "https://example.com/doc.pdf"', front)
+        self.assertIn('retrieved: "2026-07-18"', front)
+        self.assertIn('trust: "official-docs"', front)
+        self.assertIn(f'x-source-sha256: "{expected_sha}"', front)
+        self.assertIn('x-converter: "markitdown"', front)
+        self.assertEqual(body, "# Sample\n\nBody text.\n")
+
+    def test_conversion_is_deterministic_across_runs(self) -> None:
+        source = self.repo / "doc.html"
+        source.write_bytes(b"<html>fixture</html>")
+        out_a = self.repo / "run-a"
+        out_b = self.repo / "run-b"
+        for out_dir in (out_a, out_b):
+            argv = self._argv(
+                "--source", str(source),
+                "--resource", "https://example.com/doc.html",
+                "--topic", "sample",
+                "--retrieved", "2026-07-18",
+                "--out", str(out_dir),
+            )
+            with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+                with mock.patch.object(
+                    external_evidence.subprocess, "run", side_effect=self._mock_conversion("Body.\n")
+                ):
+                    with mock.patch.object(sys, "argv", argv):
+                        self.assertEqual(external_evidence.main(), 0)
+        self.assertEqual((out_a / "sample.md").read_bytes(), (out_b / "sample.md").read_bytes())
+
+
 class PrerequisiteTests(unittest.TestCase):
     def test_preflight_only_reports_command_readiness(self) -> None:
         def completed(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
@@ -379,7 +539,7 @@ class PrerequisiteTests(unittest.TestCase):
                     result = check_prereqs.check(Path(tmp))
         self.assertTrue(result["ok"])
         self.assertEqual(set(result["required"]), {"python>=3.11", "git", "uv", "git-worktree"})
-        self.assertEqual(set(result["optional"]), {"fnm", "node", "corepack", "pnpm", "openwiki"})
+        self.assertEqual(set(result["optional"]), {"fnm", "node", "corepack", "pnpm", "openwiki", "markitdown"})
         self.assertEqual(set(result["writable_paths"]), {"okf/.okf-build", "okf", ".agents/skills"})
 
 

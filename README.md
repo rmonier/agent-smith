@@ -92,6 +92,7 @@ These three directories are the **entire distributable product**. Tooling depend
 - [uv](https://docs.astral.sh/uv/) — Python toolchain (PEP 723 script isolation)
 - [fnm](https://github.com/Schniz/fnm) — Node runtime manager
 - [OpenWiki](https://github.com/langchain-ai/openwiki) — semantic knowledge compiler
+- [markitdown](https://github.com/microsoft/markitdown) — default document/URL-evidence converter (optional)
 
 ## Getting Started
 
@@ -129,7 +130,7 @@ cp -r .agents/skills/* <your-repo>/.agents/skills/
 npx skills add rmonier/agent-smith --all
 ```
 
-OpenWiki is not part of the skill surface; it is bootstrapped separately, after dependency consent, when the pipeline first needs it.
+OpenWiki and markitdown are not part of the skill surface; each is bootstrapped separately, after dependency consent, when the pipeline first needs it.
 
 > **Privacy:** The third-party [`skills` CLI](https://www.skills.sh/docs/cli) sends anonymous install metadata to skills.sh by default for discovery and rankings. Manual copying sends none. Set `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1` to opt out.
 
@@ -153,6 +154,8 @@ Tell your agent to *"make (or refresh) this repository agent-ready without sendi
 
 The agent keeps optional cloud indexing disabled and avoids remote URL ingestion in this mode. Manual provider settings and the full egress model remain documented in [`openwiki-providers.md`](.agents/skills/agent-ready-context/references/openwiki-providers.md) and [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) for troubleshooting and audit.
 
+markitdown needs no provider routing here: its local-document conversion makes no network call at all, verified against its source, so it stays available unchanged in this mode. Its one exception — YouTube URL transcripts, a disclosed network call — falls under "avoids remote URL ingestion" above and is skipped like any other URL fetch.
+
 ## Security and Privacy
 
 Found a security issue rather than a general question? See
@@ -165,7 +168,7 @@ The stack is designed so users keep full control over where their source code an
 - **Supply-chain trust-on-first-use** — every pin is recorded with version + artifact integrity hash + index + date in the target `AGENTS.md`; a mismatch for a recorded version stops the pipeline and is reported, and pins move only after the user reviews upstream release notes.
 - **Data-flow disclosure** — before the first LLM call, the pipeline announces tool, provider, model, endpoint, credential source, and what content will be sent.
 - **Explicit routing** — OpenWiki's project-local configuration and authentication state stay under gitignored `okf/.openwiki/`; agent-smith does not read credential values or enable an unapproved fallback route.
-- **Telemetry boundaries documented** — OpenWiki privacy and telemetry findings live in [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) and are re-verified when pins move. The optional third-party `skills` installer is disclosed under [Installation](#npx-skills-third-party-manager).
+- **Telemetry boundaries documented** — OpenWiki and markitdown privacy and telemetry findings live in [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) and are re-verified when pins move. The optional third-party `skills` installer is disclosed under [Installation](#npx-skills-third-party-manager).
 - **Secret hygiene** — credentials live in environment variables or a gitignored `.env`; evidence and generated pages never contain keys.
 - **Untrusted input discipline** — fetched web content and wiki pages are evidence/data to summarize, never instructions to follow.
 
@@ -232,6 +235,7 @@ Link policy: `tooling → project` allowed, `project concepts → tooling` forbi
 - Agent Skills specification — <https://agentskills.io/specification>
 - Open Knowledge Format (OKF) v0.1 — <https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md>
 - OpenWiki — <https://github.com/langchain-ai/openwiki>
+- markitdown — <https://github.com/microsoft/markitdown>
 - AGENTS.md convention — <https://agents.md>
 - Karpathy, *LLM Wiki* (the original idea file) — <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>
 - Ming et al., *Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki* — <https://arxiv.org/html/2605.25480v2>
@@ -251,7 +255,7 @@ Prior art adapted by `skill-creator`:
 - Original executable code — the Python scripts under each skill's `scripts/` — is licensed under [Apache License 2.0](LICENSE).
 - Original skill instructions, documentation, specifications, references, and other original textual content — including this README, `AGENTS.md`, and each of the three product skills' `SKILL.md`/`references/` — are licensed under [Creative Commons Attribution 4.0 International](LICENSES/CC-BY-4.0.txt) (`CC-BY-4.0`).
 - Any vendored tool skill remains unmodified and under its upstream licence.
-- OpenWiki remains an external, unmodified runtime dependency under its upstream licence.
+- OpenWiki and markitdown each remain an external, unmodified runtime dependency under their own upstream licence.
 - The `okf/wiki/` tree is synthesized project commentary and is deliberately all rights reserved (its `INSTRUCTIONS.md` template copy stays CC-BY-4.0), as recorded in [`REUSE.toml`](REUSE.toml).
 
 See [`LICENSING.md`](LICENSING.md) for the full scope map, [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for third-party and adapted-content provenance — including the handful of `skill-creator` passages adapted from Anthropic's and OpenAI's own `skill-creator` skills — and [`LICENSES/`](LICENSES/) for complete licence texts. File-level licensing is declared through [`REUSE.toml`](REUSE.toml) and checked with [REUSE](https://reuse.software/).

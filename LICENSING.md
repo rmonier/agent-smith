@@ -35,8 +35,10 @@ Project source: [`agent-smith`](https://github.com/rmonier/agent-smith).
   Apache-2.0-licensed upstream `skill-creator` skills; see
   [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-OpenWiki itself is a separately installed runtime dependency, not vendored or
-patched project source. Agent-smith's integration scripts remain original
+OpenWiki and markitdown are each a separately installed runtime dependency,
+not vendored or patched project source. Agent-smith's integration scripts
+(including `prepare_external_evidence.py`, which invokes the pinned
+markitdown CLI via subprocess and never bundles its source) remain original
 Apache-2.0 project code.
 
 File-level copyright and licence assignments are declared through

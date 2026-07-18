@@ -67,6 +67,9 @@ Every installable dependency of this pipeline has a single authoritative **upstr
 | `uv` | `uv` (installer script / OS packages) | <https://github.com/astral-sh/uv> | MIT/Apache-2.0 | standalone binary |
 | `fnm` | `fnm` (official release assets / OS packages) | <https://github.com/Schniz/fnm> | GPL-3.0 | standalone binary |
 | `openwiki` | `openwiki` (npm package) | <https://github.com/langchain-ai/openwiki> | MIT | Node.js >=20 |
+| `markitdown` | `markitdown` (PyPI; extras per required formats, e.g. `[all]`) | <https://github.com/microsoft/markitdown> | MIT | Python, optional — needed only for external-document preparation |
+
+markitdown follows the standard Python-helper pin flow already documented below: exact version, trust-on-first-use hash via the `pip download` block, and a telemetry check at pin time. The existing example rows and the `--prerelease=allow` rule already cover the mechanics; nothing markitdown-specific is added here.
 
 ### Registry-agnostic installs
 

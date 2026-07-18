@@ -16,6 +16,8 @@ The pipeline must give the user full transparency and control over where their s
 | OpenWiki login/refresh | the selected provider's auth protocol data | that provider's audited auth endpoints | local OpenAI-compatible endpoint needs no hosted login |
 | OpenWiki `code --init`/`--update` (staged) | filtered staged corpus, accepted staged wiki, prompts | the selected provider's audited model endpoints | `openai-compatible` provider against a local engine |
 | external docs evidence via web tool | the URLs fetched | the fetched sites | skip, or user provides files locally |
+| `prepare_external_evidence.py` (markitdown, local files) | user-provided local documents | nowhere (local conversion, verified against installed package source) | already local |
+| `prepare_external_evidence.py` (markitdown, YouTube URLs only) | the YouTube URL given as `--source` | YouTube's transcript API | skip; provide a transcript as a local file instead |
 | OKF spec baseline refresh | nothing sensitive (reads public spec) | github.com | skip; embedded baseline |
 
 Keep generated artifacts (`okf/.okf-build/`, local producer state under `okf/.openwiki/`, caches) gitignored so they never leak environment details.
@@ -27,6 +29,7 @@ Keep generated artifacts (`okf/.okf-build/`, local producer state under `okf/.op
 - `openwiki`: the pinned candidate's tracing/observability integrations (LangSmith, LangChain tracing, OTEL) stay disabled through their documented environment switches; network egress is only the selected provider route and disclosed install-time asset endpoints. OpenWiki ships opt-out anonymous CLI run telemetry (PostHog; event-level per its documentation, never contents/paths/prompts); the staged runner exports `OPENWIKI_TELEMETRY_DISABLED=1` and `DO_NOT_TRACK=1` by default, so staged runs stay silent unless the user opts in. Re-audit at every pin move.
 - `fnm`: no telemetry per upstream documentation.
 - `uv`: no telemetry per upstream documentation.
+- `markitdown`: no telemetry, verified at pin time against the installed package source, not just docs. Local-file conversion never touches the network: its HTTP session only activates on the URI-conversion code path, which local paths never reach — confirmed by reading `_markitdown.py`/`convert_local`, not assumed. Two verified exceptions, both handled explicitly by the wrapper: YouTube URLs are passed through with a printed disclosure (markitdown fetches the transcript directly — no local-file equivalent exists); audio sources (`.wav`/`.mp3`/`.m4a`/`.mp4`) are rejected outright, because markitdown's transcription silently calls the Google Web Speech API with the actual audio content and no opt-out when the `[audio-transcription]`/`[all]` extras are installed. Re-verify this source-level audit at every pin move, and record the check with the pin.
 
 Re-check these claims from the upstream repositories whenever a pinned version changes, and record the check date next to the pin.
 

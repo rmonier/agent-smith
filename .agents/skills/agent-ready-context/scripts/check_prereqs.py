@@ -140,6 +140,7 @@ def check(repo: Path) -> dict[str, Any]:
         "corepack": ["corepack", "--version"],
         "pnpm": ["pnpm", "--version"],
         "openwiki": ["openwiki", "--version"],
+        "markitdown": ["markitdown", "--version"],
     }.items():
         # openwiki's first invocation can spend longer than 10s on a cold
         # Node.js start; a short timeout would misreport it as missing.
@@ -197,6 +198,13 @@ def check(repo: Path) -> dict[str, Any]:
             "version per references/dependencies.md "
             "(upstream source: https://github.com/langchain-ai/openwiki). "
             "Without it, use the conservative skeleton generator."
+        )
+    if not result["optional"]["markitdown"]["ok"]:
+        result["notes"].append(
+            "markitdown is optional, needed only for external-document preparation; with user "
+            "consent install the exact pinned version through the configured Python index, e.g. "
+            "uv tool install 'markitdown[all]==<pinned-version>' "
+            "(upstream source: https://github.com/microsoft/markitdown)."
         )
 
     return result

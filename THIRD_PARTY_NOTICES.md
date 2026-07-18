@@ -2,8 +2,8 @@
 
 This document records third-party and adapted material distributed within
 `agent-smith`. Runtime dependencies that users install separately (such as
-OpenWiki) are not bundled here unless explicitly stated below — only what is
-actually committed to this repository is in scope.
+OpenWiki or markitdown) are not bundled here unless explicitly stated below —
+only what is actually committed to this repository is in scope.
 
 ## skill-creator: adapted passages
 
