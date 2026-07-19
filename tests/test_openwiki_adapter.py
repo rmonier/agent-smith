@@ -729,6 +729,35 @@ class ValidationAndPromotionTests(WorkspaceCase):
         errors = openwiki_validator.validate_openwiki(invalid)
         self.assertTrue(any("route to quickstart" in error for error in errors))
 
+    def test_unquoted_colon_in_frontmatter_value_fails_with_actionable_hint(self) -> None:
+        # Regression: a real OpenWiki run generated `description: Describes the
+        # decentralized transport layer: UDP peer discovery, ...` - an
+        # unquoted colon inside the value, which PyYAML reads as a second,
+        # nested mapping key and refuses to parse. The deterministic
+        # validator must catch this loudly, with a hint pointing at the
+        # actual fix, not just a raw parser traceback.
+        broken = self.repo / "broken"
+        runner._write_snapshot(
+            broken,
+            {
+                "index.md": b"# Index\n\n[Quickstart](quickstart.md)\n",
+                "quickstart.md": page("Quickstart"),
+                "INSTRUCTIONS.md": runner.INSTRUCTIONS_TEMPLATE.read_bytes(),
+                "transport.md": (
+                    b"---\n"
+                    b"type: Reference\n"
+                    b"title: Transport Layer\n"
+                    b"description: Describes the decentralized transport layer: UDP peer "
+                    b"discovery, TCP one-to-one conversations, and the synchronizer that "
+                    b"pushes shared database state between instances.\n"
+                    b"---\n\n# Transport Layer\n\nBody.\n"
+                ),
+            },
+        )
+        errors = openwiki_validator.validate_openwiki(broken)
+        self.assertTrue(any("invalid YAML frontmatter" in error for error in errors))
+        self.assertTrue(any("wrap that value in double quotes" in error for error in errors))
+
     def test_promotion_is_markdown_only_transactional_and_supports_noop(self) -> None:
         accepted = wiki_snapshot(marker="old")
         runner._write_snapshot(self.repo / "okf/wiki", accepted)
@@ -960,6 +989,167 @@ class ExternalEvidenceTests(WorkspaceCase):
                     with mock.patch.object(sys, "argv", argv):
                         self.assertEqual(external_evidence.main(), 0)
         self.assertEqual((out_a / "sample.md").read_bytes(), (out_b / "sample.md").read_bytes())
+
+    def test_reversible_mojibake_is_auto_fixed_and_disclosed(self) -> None:
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--topic", "sample-doc",
+            "--out", str(out_dir),
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(
+                external_evidence.subprocess, "run",
+                side_effect=self._mock_conversion("Bonjour, cafÃ© et naÃ¯vetÃ©.\n"),
+            ):
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = external_evidence.main()
+        self.assertEqual(code, 0)
+        text = (out_dir / "sample-doc.md").read_text(encoding="utf-8")
+        self.assertIn("x-encoding-fix", text)
+        self.assertNotIn("x-encoding-warning", text)
+        self.assertIn("café", text)
+        self.assertIn("naïveté", text)
+        self.assertNotIn("Ã©", text)
+        self.assertIn("auto-corrected", stderr.getvalue())
+
+    def test_unrecoverable_replacement_char_is_flagged_but_still_written(self) -> None:
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--topic", "sample-doc",
+            "--out", str(out_dir),
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(
+                external_evidence.subprocess, "run",
+                side_effect=self._mock_conversion("Broken � byte here.\n"),
+            ):
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = external_evidence.main()
+        self.assertEqual(code, 0)
+        text = (out_dir / "sample-doc.md").read_text(encoding="utf-8")
+        self.assertIn("x-encoding-warning", text)
+        self.assertIn("Broken � byte here.", text)
+        self.assertIn("ask the user to choose", stderr.getvalue())
+
+    def test_unmapped_pdf_glyph_cid_placeholder_is_flagged_not_auto_fixed(self) -> None:
+        # Regression for the reported failure mode in jsvine/pdfplumber#1280
+        # (ligatures decode to the replacement character regardless of
+        # expand_ligatures) and its sibling in microsoft/markitdown#1290
+        # (unmapped glyphs surface as raw (cid:NNN) tokens instead). Both are
+        # lossy at the source - the embedded font's glyph-to-Unicode mapping
+        # already failed - so detect_mojibake must catch the CID form and
+        # try_fix_mojibake must never claim a fix for pure ASCII noise.
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--topic", "sample-doc",
+            "--out", str(out_dir),
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(
+                external_evidence.subprocess, "run",
+                side_effect=self._mock_conversion("Broken text (cid:588)(cid:607)(cid:623) here.\n"),
+            ):
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = external_evidence.main()
+        self.assertEqual(code, 0)
+        text = (out_dir / "sample-doc.md").read_text(encoding="utf-8")
+        self.assertIn("x-encoding-warning", text)
+        self.assertNotIn("x-encoding-fix", text)
+        self.assertIn("(cid:588)", text)  # written verbatim, never silently dropped
+        self.assertIn("pdfplumber#1280", stderr.getvalue())
+        self.assertIn("markitdown#1290", stderr.getvalue())
+
+    def test_mojibake_already_in_text_source_is_attributed_to_source_not_converter(self) -> None:
+        source = self.repo / "already-bad.html"
+        source.write_text("<p>cafÃ© was already like this</p>", encoding="utf-8")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.html",
+            "--topic", "sample-html",
+            "--out", str(out_dir),
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(external_evidence.shutil, "which", return_value="/usr/bin/markitdown"):
+            with mock.patch.object(external_evidence, "try_fix_mojibake", return_value=None):
+                with mock.patch.object(
+                    external_evidence.subprocess, "run",
+                    side_effect=self._mock_conversion("<p>cafÃ© was already like this</p>\n"),
+                ):
+                    with mock.patch.object(sys, "argv", argv):
+                        with contextlib.redirect_stderr(stderr):
+                            code = external_evidence.main()
+        self.assertEqual(code, 0)
+        self.assertIn("already appear in the local source file itself", stderr.getvalue())
+
+    def test_converter_cmd_uses_alternative_tool_and_records_its_name(self) -> None:
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        out_dir = self.repo / "okf/.okf-build/external"
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--topic", "sample-doc",
+            "--out", str(out_dir),
+            "--converter-cmd", "pandoc -f pdf -t gfm",
+        )
+        with mock.patch.object(
+            external_evidence.subprocess, "run",
+            side_effect=self._mock_conversion("# Clean\n\nNo issues here.\n"),
+        ) as run_mock:
+            with mock.patch.object(sys, "argv", argv):
+                code = external_evidence.main()
+        self.assertEqual(code, 0)
+        text = (out_dir / "sample-doc.md").read_text(encoding="utf-8")
+        self.assertIn('x-converter: "pandoc"', text)
+        called_argv = run_mock.call_args.args[0]
+        self.assertEqual(called_argv, ["pandoc", "-f", "pdf", "-t", "gfm", str(source)])
+
+    def test_converter_cmd_rejects_youtube_url_exception(self) -> None:
+        argv = self._argv(
+            "--source", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--resource", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "--converter-cmd", "some-other-tool",
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stderr(stderr):
+                code = external_evidence.main()
+        self.assertEqual(code, 2)
+        self.assertIn("URL", stderr.getvalue())
+
+    def test_converter_cmd_blank_string_is_rejected(self) -> None:
+        source = self.repo / "doc.pdf"
+        source.write_bytes(b"%PDF-1.4 fixture bytes")
+        argv = self._argv(
+            "--source", str(source),
+            "--resource", "https://example.com/doc.pdf",
+            "--converter-cmd", "   ",
+        )
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stderr(stderr):
+                code = external_evidence.main()
+        self.assertEqual(code, 2)
+        self.assertIn("did not parse to a command", stderr.getvalue())
 
 
 class VisibleTerminalLauncherTests(unittest.TestCase):

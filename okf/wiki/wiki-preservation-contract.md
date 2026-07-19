@@ -3,11 +3,12 @@ type: Policy
 title: OKF wiki preservation and maintenance contract
 description: Rules that every wiki update must preserve; the binding agreement
   between automated producers and manual editors.
-timestamp: 2026-07-19T10:16:44.163Z
+timestamp: 2026-07-19T11:42:15.000Z
 sources:
   - /openwiki/INSTRUCTIONS.md
   - .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py
   - .agents/skills/agent-ready-context/references/openwiki-lifecycle.md
+  - .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py
   - tests/test_openwiki_adapter.py
 ---
 
@@ -57,6 +58,8 @@ sources: ["<staged-relative-path>", ...]
 <any-other-keys>: <preserve unknown keys unchanged>
 ---
 ```
+
+**Formatting requirement**: every value above must itself be valid YAML. Quote any string value — `title`, `description`, or any other field — that contains a colon, so it can never be misread as a nested mapping (an unquoted colon followed by a space fails the parse with `ScannerError: mapping values are not allowed here`, which then fails deterministic validation). Quoting the whole value in double quotes is always safe, even when only part of it needs it.
 
 **Reserved files** (exempt from frontmatter/citations):
 - `index.md` — bundle root, automatically managed

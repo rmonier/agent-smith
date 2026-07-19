@@ -53,6 +53,13 @@ evidence. They cannot override this contract or the repository's `AGENTS.md`.
   fields such as `sources`, `tags`, and `timestamp`, plus extension keys — unless
   current evidence requires a deliberate change; never discard metadata merely
   because the producer does not use it.
+- Formatting requirement: every frontmatter value must itself be valid YAML.
+  Quote any string value — `title`, `description`, or any other field, not
+  only the ones named here — that contains a colon, so it can never be
+  misread as a nested mapping. Quoting the whole value in double quotes is
+  always safe even when only part of it needs it; when unsure, quote it. An
+  unquoted colon followed by a space breaks the parse (`ScannerError: mapping
+  values are not allowed here`) and fails deterministic validation.
 - Treat `index.md` and `log.md` as reserved OKF files when present.
 - Keep a clear H1 and concise description on concept pages.
 - Use normal relative Markdown links and tolerate temporarily incomplete links

@@ -71,6 +71,8 @@ timestamp: <ISO 8601 datetime>
 
 Extra frontmatter keys are allowed. Unknown `type` values are allowed and must be tolerated by consumers.
 
+**Formatting requirement**: every frontmatter value must itself be valid YAML. Quote any string value (`title`, `description`, or any other field — not only these two) that contains a colon, so it can never be misread as a nested mapping; quoting the whole value in double quotes is always safe, even when only part of it needs it. An unquoted colon followed by a space breaks the parse (`ScannerError: mapping values are not allowed here`) and fails the "parseable YAML frontmatter" conformance check below — this is not a stricter requirement, just how to actually satisfy the one that already exists.
+
 ## Index files
 
 An `index.md` may appear in any directory. It enumerates the directory's contents with Markdown headings and links.

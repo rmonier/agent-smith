@@ -90,7 +90,13 @@ def load_yaml(raw: str, rel: str, errors: list[str]) -> dict[str, Any] | None:
     try:
         data = yaml.safe_load(raw)
     except Exception as exc:  # pragma: no cover - error formatting
-        errors.append(f"{rel}: invalid YAML frontmatter: {exc}")
+        message = f"{rel}: invalid YAML frontmatter: {exc}"
+        if "mapping values are not allowed here" in str(exc):
+            message += (
+                " - likely an unquoted colon inside a string value (title, description, ...); "
+                "wrap that value in double quotes so it can't be misread as a nested mapping"
+            )
+        errors.append(message)
         return None
     if data is None:
         return {}

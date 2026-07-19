@@ -18,6 +18,7 @@ The pipeline must give the user full transparency and control over where their s
 | external docs evidence via web tool | the URLs fetched | the fetched sites | skip, or user provides files locally |
 | `prepare_external_evidence.py` (markitdown, local files) | user-provided local documents | nowhere (local conversion, verified against installed package source) | already local |
 | `prepare_external_evidence.py` (markitdown, YouTube URLs only) | the YouTube URL given as `--source` | YouTube's transcript API | skip; provide a transcript as a local file instead |
+| `prepare_external_evidence.py --converter-cmd` (disclosed escalation only) | the local document, run through a specific tool the user approved after being asked | unverified - not part of this skill's pinned/audited toolchain, so its network behavior is whatever the disclosure step states or admits is unknown | default: stay on markitdown, or skip this source |
 | OKF spec baseline refresh | nothing sensitive (reads public spec) | github.com | skip; embedded baseline |
 
 Keep generated artifacts (`okf/.okf-build/`, local producer state under `okf/.openwiki/`, caches) gitignored so they never leak environment details.
@@ -30,6 +31,7 @@ Keep generated artifacts (`okf/.okf-build/`, local producer state under `okf/.op
 - `fnm`: no telemetry per upstream documentation.
 - `uv`: no telemetry per upstream documentation.
 - `markitdown`: no telemetry, verified at pin time against the installed package source, not just docs. Local-file conversion never touches the network: its HTTP session only activates on the URI-conversion code path, which local paths never reach — confirmed by reading `_markitdown.py`/`convert_local`, not assumed. Two verified exceptions, both handled explicitly by the wrapper: YouTube URLs are passed through with a printed disclosure (markitdown fetches the transcript directly — no local-file equivalent exists); audio sources (`.wav`/`.mp3`/`.m4a`/`.mp4`) are rejected outright, because markitdown's transcription silently calls the Google Web Speech API with the actual audio content and no opt-out when the `[audio-transcription]`/`[all]` extras are installed. Re-verify this source-level audit at every pin move, and record the check with the pin.
+- A `--converter-cmd` escalation tool is explicitly **not** covered by any of the above: it is not part of this skill's pinned toolchain, so nothing here has verified its telemetry or network behavior against source. The disclosure required before running it (`references/external-docs.md`) must say plainly when that behavior is unknown rather than borrowing markitdown's clean bill of health.
 
 Re-check these claims from the upstream repositories whenever a pinned version changes, and record the check date next to the pin.
 
