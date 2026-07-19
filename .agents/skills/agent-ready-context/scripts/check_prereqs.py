@@ -194,7 +194,7 @@ def check(repo: Path) -> dict[str, Any]:
 
     companion_notes = {
         "skill-creator": "skill-creator is not present. OKF/AGENTS.md maintenance can continue, but repeated action skill creation is unavailable.",
-        "subagent-profile-adapter": "subagent-profile-adapter is not present. Context maintenance can continue, but harness-specific subagent/profile adapters cannot be hydrated automatically.",
+        "harness-profile-adapter": "harness-profile-adapter is not present. Context maintenance can continue, but harness-specific subagent/profile adapters cannot be hydrated automatically.",
     }
     for companion, note in companion_notes.items():
         skill_md = repo / ".agents" / "skills" / companion / "SKILL.md"

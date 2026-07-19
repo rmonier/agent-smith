@@ -166,7 +166,7 @@ The bundle-root `index.md` is the exception, because OKF navigation must enumera
 * [Tooling](tooling/index.md) - User-scoped runtime/harness context, local by default. Project concept pages must not depend on it.
 ```
 
-Tooling pages are **local by default** (user-scoped, gitignored except the committed `tooling/index.md` navigation stub — git scope rules in `subagent-profile-adapter`'s tooling context policy). The root entry points at the committed stub, never at individual local pages, so the committed bundle and any committed-plus-local overlay are each a valid, navigable OKF bundle: the spec allows arbitrary subdirectories and index files in any directory, and committed content never links to local pages, so link integrity holds on every clone.
+Tooling pages are **local by default** (user-scoped, gitignored except the committed `tooling/index.md` navigation stub — git scope rules in `harness-profile-adapter`'s tooling context policy). The root entry points at the committed stub, never at individual local pages, so the committed bundle and any committed-plus-local overlay are each a valid, navigable OKF bundle: the spec allows arbitrary subdirectories and index files in any directory, and committed content never links to local pages, so link integrity holds on every clone.
 
 Each local non-reserved tooling page must contain at least one outgoing standard relative Markdown link to durable project knowledge. This preserves the local-by-default boundary while keeping the bundle connected; never solve it by enumerating ignored local pages in a committed index.
 
@@ -175,5 +175,5 @@ The root `index.md` and root `log.md` are reserved navigation/history files; lin
 Validate it with:
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
 ```

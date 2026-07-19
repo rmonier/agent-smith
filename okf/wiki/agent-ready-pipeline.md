@@ -4,7 +4,7 @@ title: Agent-Ready Pipeline
 description: The `agent-ready-context` skill walks a repository through a
   deterministic sequence to gain operational orientation, durable context, and
   portable action capabilities.
-timestamp: 2026-07-19T13:33:32.000Z
+timestamp: 2026-07-19T18:17:36.000Z
 ---
 
 # Agent-Ready Pipeline
@@ -180,7 +180,7 @@ Review the wiki and work performed for **repeated actions**:
 ### 13. Harness adapter generation (optional, final)
 
 When the user wants harness-specific profiles (subagents, personas, adapters):
-- Run `subagent-profile-adapter` **after context and action skills are ready**
+- Run `harness-profile-adapter` **after context and action skills are ready**
 - Generates native files pointing to canonical AGENTS.md, wiki, and skills
 - Records harness evidence under `okf/wiki/tooling/` (optional, per policy)
 

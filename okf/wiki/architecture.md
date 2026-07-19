@@ -3,13 +3,13 @@ type: Architecture
 title: Agent-smith architecture and component boundaries
 description: The separation of skills (actions), OKF wiki (context), AGENTS.md
   (orientation), and harness adapters.
-timestamp: 2026-07-19T15:26:59.000Z
+timestamp: 2026-07-19T18:17:36.000Z
 sources:
   - README.md
   - AGENTS.md
   - .agents/skills/agent-ready-context/SKILL.md
   - .agents/skills/skill-creator/SKILL.md
-  - .agents/skills/subagent-profile-adapter/SKILL.md
+  - .agents/skills/harness-profile-adapter/SKILL.md
 ---
 
 # Agent-Smith Architecture
@@ -78,7 +78,7 @@ The complete transformable product is three portable skills under `.agents/skill
    - Validates against testing baseline (pressure-test before and after)
    - Reusable across repositories
 
-3. **`subagent-profile-adapter`** — baseline harness-visibility bridging (not optional) plus optional harness adapter generation
+3. **`harness-profile-adapter`** — baseline harness-visibility bridging (not optional) plus optional harness adapter generation
    - Detects active runtime (not just installed binaries)
    - Bridges instruction-file and skills-directory discovery when the harness can't find `AGENTS.md`/`.agents/skills/` natively
    - Generates native profiles pointing to canonical AGENTS.md, wiki, skills
@@ -111,4 +111,4 @@ The architecture degrades gracefully when OpenWiki is unavailable or declined:
 - `/AGENTS.md` — operational basics, toolchain pins, boundary rules
 - `/.agents/skills/agent-ready-context/SKILL.md` — core skill workflow and authority
 - `/.agents/skills/skill-creator/SKILL.md` — action skill design and security defaults
-- `/.agents/skills/subagent-profile-adapter/SKILL.md` — harness adapter boundaries and runtime detection
+- `/.agents/skills/harness-profile-adapter/SKILL.md` — harness adapter boundaries and runtime detection

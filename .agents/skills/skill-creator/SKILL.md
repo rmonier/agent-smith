@@ -9,8 +9,8 @@ metadata:
   author: Romain Monier
   author-url: https://github.com/rmonier
   source: https://github.com/rmonier/agent-smith
-  skill-creator.companion-skills: agent-ready-context, subagent-profile-adapter
-  skill-creator.companion-skill-roles: agent-ready-context=optional upstream OKF context; subagent-profile-adapter=baseline harness-visibility bridging for this skill's own output plus optional downstream harness adapters
+  skill-creator.companion-skills: agent-ready-context, harness-profile-adapter
+  skill-creator.companion-skill-roles: agent-ready-context=optional upstream OKF context; harness-profile-adapter=baseline harness-visibility bridging for this skill's own output plus optional downstream harness adapters
   skill-creator.prereq-guidance: references/dependencies.md
 allowed-tools: Read Write Edit Bash(uv:*) Bash(python:*) Bash(find:*) Bash(test:*) Bash(chmod:*) Bash(git:*)
 ---

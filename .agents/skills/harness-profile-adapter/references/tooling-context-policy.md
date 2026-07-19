@@ -116,7 +116,7 @@ This is the only place project-side navigation may point at tooling. Root `index
 Run:
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
 ```
 
 The validator fails if project OKF concept pages link back to `okf/wiki/tooling/`, if `okf/wiki/tooling/` has pages that the bundle-root `index.md` does not reference, or if tooling pages exist without the committed `tooling/index.md` navigation stub.
@@ -125,4 +125,4 @@ It also fails when a non-reserved local tooling page has no outgoing Markdown li
 
 ## Default artifact rule
 
-Baseline agent-ready bootstrap creates under `okf/wiki/tooling/` only the minimal harness build record (case 1 above) plus, on first use, the committed `tooling/index.md` stub and the bundle-root index entry. Runtime hint JSON files and policy output text files remain diagnostic outputs for the POC or explicit subagent-profile-adapter runs: print them to the terminal, write them to a temporary path, or save them only if the user requests an audit artifact.
+Baseline agent-ready bootstrap creates under `okf/wiki/tooling/` only the minimal harness build record (case 1 above) plus, on first use, the committed `tooling/index.md` stub and the bundle-root index entry. Runtime hint JSON files and policy output text files remain diagnostic outputs for the POC or explicit harness-profile-adapter runs: print them to the terminal, write them to a temporary path, or save them only if the user requests an audit artifact.

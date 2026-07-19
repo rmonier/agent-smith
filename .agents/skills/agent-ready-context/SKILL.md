@@ -10,10 +10,10 @@ metadata:
   author: Romain Monier
   author-url: https://github.com/rmonier
   source: https://github.com/rmonier/agent-smith
-  agent-ready-context.companion-skills: skill-creator, subagent-profile-adapter
-  agent-ready-context.companion-skill-roles: skill-creator=optional action-skill extraction; subagent-profile-adapter=baseline harness-visibility bridging (not optional) plus optional runtime/tooling context and adapter generation
-  agent-ready-context.runtime-context-helper: subagent-profile-adapter/scripts/inspect_runtime_context.py
-  agent-ready-context.tooling-context-policy: subagent-profile-adapter/references/tooling-context-policy.md
+  agent-ready-context.companion-skills: skill-creator, harness-profile-adapter
+  agent-ready-context.companion-skill-roles: skill-creator=optional action-skill extraction; harness-profile-adapter=baseline harness-visibility bridging (not optional) plus optional runtime/tooling context and adapter generation
+  agent-ready-context.runtime-context-helper: harness-profile-adapter/scripts/inspect_runtime_context.py
+  agent-ready-context.tooling-context-policy: harness-profile-adapter/references/tooling-context-policy.md
   agent-ready-context.memory-vendor: openwiki (exact byte-for-byte upstream pin; isolated staged runs only)
   agent-ready-context.prereq-check: scripts/check_prereqs.py
   agent-ready-context.prereq-guidance: references/dependencies.md
@@ -84,9 +84,9 @@ The numbered list below is a compressed routing index, not the authoritative pro
 12. Promote only the reviewed candidate with the wrapper's `--promote` action (transactional, Markdown-only), then validate the live tree again. The stock CLI never touches `okf/wiki/`.
 13. Re-run `merge_agents_md_okf_section.py` if root guidance needs the latest commands or pins, and re-pass over the non-managed parts of `AGENTS.md` against the built wiki: operational basics (toolchain versions, setup/build/test commands) stay in-file, deeper context collapses to the `okf/wiki/index.md` front door, never deep-links to individual pages.
 14. Inspect `okf/wiki/INSTRUCTIONS.md`. It is the project-owned update contract seeded from `assets/openwiki-INSTRUCTIONS.template.md`. Verify it exists and survived the run byte-for-byte, check whether custom sections such as `tooling/` are declared, and customize it only with user consent.
-15. Update the harness record discovered in step 1 with observations from this pass, or create `okf/wiki/tooling/harnesses/<harness>.md` when identification was reliable but no page existed: harness name/version, detection signals, date, and operational quirks, per `subagent-profile-adapter`'s `references/tooling-context-policy.md`. Follow the link policy — labeled bundle-root `index.md` entry, `okf/wiki/INSTRUCTIONS.md` declaration (step 14), one-way tooling-to-project Markdown links only; on first use also create the committed `tooling/index.md` navigation stub (tooling pages are user-scoped and local by default, gitignored except the stub); verify with `validate_tooling_link_policy.py`. Best-effort, never blocking: if the active harness cannot be determined reliably, skip the record and state that in the run report.
-16. Check whether the active harness detected in step 1 can natively discover root `AGENTS.md` and `.agents/skills/`; if `subagent-profile-adapter` is available, use it to bridge whichever one it can't (a local alias, never a copy) — do this regardless of whether the user separately wants full runtime subagent/profile adapters, since without it the harness cannot see anything this pass just built, and no later adapter would help either. Best-effort, never blocking: if the harness or its requirements can't be determined, state that in the run report instead of silently skipping; if the companion skill itself is unavailable, say so too.
-17. Review the wiki and recent work for repeated **actions**. If `skill-creator` is available, use it for custom action skills; use `subagent-profile-adapter` for full runtime subagent/profile adapters only when the user separately wants them — distinct from the baseline bridging in step 16, which is not optional. State all conclusions explicitly in the run report, even when negative — a silent skip is indistinguishable from a forgotten step.
+15. Update the harness record discovered in step 1 with observations from this pass, or create `okf/wiki/tooling/harnesses/<harness>.md` when identification was reliable but no page existed: harness name/version, detection signals, date, and operational quirks, per `harness-profile-adapter`'s `references/tooling-context-policy.md`. Follow the link policy — labeled bundle-root `index.md` entry, `okf/wiki/INSTRUCTIONS.md` declaration (step 14), one-way tooling-to-project Markdown links only; on first use also create the committed `tooling/index.md` navigation stub (tooling pages are user-scoped and local by default, gitignored except the stub); verify with `validate_tooling_link_policy.py`. Best-effort, never blocking: if the active harness cannot be determined reliably, skip the record and state that in the run report.
+16. Check whether the active harness detected in step 1 can natively discover root `AGENTS.md` and `.agents/skills/`; if `harness-profile-adapter` is available, use it to bridge whichever one it can't (a local alias, never a copy) — do this regardless of whether the user separately wants full runtime subagent/profile adapters, since without it the harness cannot see anything this pass just built, and no later adapter would help either. Best-effort, never blocking: if the harness or its requirements can't be determined, state that in the run report instead of silently skipping; if the companion skill itself is unavailable, say so too.
+17. Review the wiki and recent work for repeated **actions**. If `skill-creator` is available, use it for custom action skills; use `harness-profile-adapter` for full runtime subagent/profile adapters only when the user separately wants them — distinct from the baseline bridging in step 16, which is not optional. State all conclusions explicitly in the run report, even when negative — a silent skip is indistinguishable from a forgotten step.
 
 ## Tooling bootstrap
 
@@ -256,8 +256,8 @@ uv run .agents/skills/skill-creator/scripts/suggest_skills_from_okf.py --repo . 
 Hydrate harness-specific subagent/profile adapters only after context and action skills are ready:
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.py --repo .
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/inspect_runtime_context.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
 ```
 
 ## Security baseline

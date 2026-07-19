@@ -24,7 +24,7 @@ Please include:
 ## What's in scope
 
 The three product skills (`agent-ready-context`, `skill-creator`,
-`subagent-profile-adapter`) and their bundled scripts. Issues in upstream
+`harness-profile-adapter`) and their bundled scripts. Issues in upstream
 OpenWiki should generally be reported there, unless the issue is specifically
 in how this repository installs, configures, stages, validates, or invokes it.
 The same rule applies to any other upstream tool skill.

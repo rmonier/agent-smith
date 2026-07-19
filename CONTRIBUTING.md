@@ -41,7 +41,7 @@ uv run .agents/skills/skill-creator/scripts/quick_validate.py .agents/skills/<sk
 uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .
 
 # Adapter/tooling-link policy changes
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
 
 # Changes to the agent-ready-context adapter or validator scripts
 uv run tests/test_openwiki_adapter.py

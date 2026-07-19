@@ -1,5 +1,5 @@
 ---
-name: subagent-profile-adapter
+name: harness-profile-adapter
 description: Creates and maintains harness-specific subagent/profile adapters after agent-ready context and custom action skills exist, and separately checks whether the active harness can natively discover AGENTS.md and .agents/skills/ at all - bridging either with a local alias when it can't. The bridging check is baseline compatibility and applies whenever agent-ready-context finishes a pass, regardless of whether runtime adapters are also wanted; full subagent/profile/persona generation stays optional, used only when the user separately requests it, without either becoming a source of truth.
 license: See LICENSING.md
 compatibility: Requires an Agent Skills compatible harness, repository file read/write access, and Python 3.11+ for optional validation helpers (run them with uv when available). Requires web access or local harness documentation when current subagent/profile semantics are unknown.
@@ -9,15 +9,15 @@ metadata:
   author: Romain Monier
   author-url: https://github.com/rmonier
   source: https://github.com/rmonier/agent-smith
-  subagent-profile-adapter.companion-skills: agent-ready-context, skill-creator
-  subagent-profile-adapter.companion-skill-roles: agent-ready-context=preferred upstream context workflow; skill-creator=preferred upstream action-skill workflow
-  subagent-profile-adapter.provides: runtime-context-inspection, tooling-context-policy, harness-visibility-bridging, harness-adapter-generation
-  subagent-profile-adapter.runtime-detection: references/runtime-detection.md
-  subagent-profile-adapter.tooling-context-policy: references/tooling-context-policy.md
+  harness-profile-adapter.companion-skills: agent-ready-context, skill-creator
+  harness-profile-adapter.companion-skill-roles: agent-ready-context=preferred upstream context workflow; skill-creator=preferred upstream action-skill workflow
+  harness-profile-adapter.provides: runtime-context-inspection, tooling-context-policy, harness-visibility-bridging, harness-adapter-generation
+  harness-profile-adapter.runtime-detection: references/runtime-detection.md
+  harness-profile-adapter.tooling-context-policy: references/tooling-context-policy.md
 allowed-tools: Read Write Edit Bash(uv:*) Bash(python:*) Bash(git:*) Bash(readlink:*) Bash(test:*) Bash(mkdir:*) WebFetch WebSearch
 ---
 
-# Subagent Profile Adapter
+# Harness Profile Adapter
 
 Use this skill to create or maintain **harness-specific subagent/profile adapters** from the repository's existing agent-ready context.
 
@@ -95,7 +95,7 @@ Then:
    - Run:
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
 ```
 
 ## Tooling context in OKF
@@ -124,7 +124,7 @@ Never conclude “the active harness is X” only because `x` is installed. A us
 Use `scripts/inspect_runtime_context.py` only to collect hints; it does not replace user confirmation when signals are ambiguous.
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/inspect_runtime_context.py --repo .
 ```
 
 ## Non-goals

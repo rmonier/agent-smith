@@ -38,7 +38,7 @@ I could not confidently identify the active harness. Which harness should I targ
 The helper script gathers hints without invoking vendor CLIs:
 
 ```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/inspect_runtime_context.py --repo .
 ```
 
 Treat the output as evidence, not authority.

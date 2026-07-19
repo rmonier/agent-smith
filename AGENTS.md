@@ -8,7 +8,7 @@ The product surface is the three skills under `.agents/skills/`:
 
 - `agent-ready-context` - core repository-readiness pipeline: prerequisites, artifact hygiene, isolated OpenWiki staging, citation-checked review candidates, OKF validation, and AGENTS.md maintenance.
 - `skill-creator` - creates or updates reusable action skills when repeated executable workflows are discovered.
-- `subagent-profile-adapter` - after context and action skills exist: checks whether the active harness can natively discover `AGENTS.md`/`.agents/skills/` and bridges the gap when it can't (not optional), plus optional harness-specific adapter generation.
+- `harness-profile-adapter` - after context and action skills exist: checks whether the active harness can natively discover `AGENTS.md`/`.agents/skills/` and bridges the gap when it can't (not optional), plus optional harness-specific adapter generation.
 
 Human-facing documentation remains in `README.md` and `docs/`; agent-facing operational guidance lives here and in `okf/wiki/`.
 
@@ -59,9 +59,9 @@ Use these context sources in this order:
 - There is no app/server build or launch command; this repo ships portable skill files and validation scripts.
 - Run the skill prerequisite check with `uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .`.
 - For skill changes, run `uv run .agents/skills/skill-creator/scripts/quick_validate.py .agents/skills/<skill-name>`.
-- For adapter/link policy work, run `uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .`.
+- For adapter/link policy work, run `uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .`.
 - Run the adapter contract tests with `uv run tests/test_openwiki_adapter.py`.
-- Run the harness-alias/bridging contract tests with `uv run tests/test_subagent_profile_adapter.py`.
+- Run the harness-alias/bridging contract tests with `uv run tests/test_harness_profile_adapter.py`.
 - Validate OKF output with: `uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .`.
 
 ## Knowledge-base workflow

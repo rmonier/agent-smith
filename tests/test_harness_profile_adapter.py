@@ -4,7 +4,7 @@
 # ///
 # SPDX-FileCopyrightText: 2026 Romain Monier <https://github.com/rmonier>
 # SPDX-License-Identifier: Apache-2.0
-"""Contract tests for subagent-profile-adapter's local alias helper."""
+"""Contract tests for harness-profile-adapter's local alias helper."""
 from __future__ import annotations
 
 import contextlib
@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / ".agents" / "skills" / "subagent-profile-adapter" / "scripts"
+SCRIPTS = ROOT / ".agents" / "skills" / "harness-profile-adapter" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import ensure_local_alias as alias_tool  # noqa: E402

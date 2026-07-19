@@ -2,7 +2,7 @@
 type: quickstart
 title: Repository memory quickstart
 description: Compact front door to agent-smith's durable agent context.
-timestamp: 2026-07-16T07:21:44.902Z
+timestamp: 2026-07-19T18:17:36.000Z
 sources:
   - AGENTS.md
   - README.md
@@ -21,7 +21,7 @@ source/tests as authority.
 
 This is the deterministic zero-LLM baseline of the wiki: agent-smith's three
 product skills live under `.agents/skills/` (`agent-ready-context`,
-`skill-creator`, `subagent-profile-adapter`), the OpenWiki producer maintains
+`skill-creator`, `harness-profile-adapter`), the OpenWiki producer maintains
 this bundle through the staged runner
 (`.agents/skills/agent-ready-context/scripts/run_openwiki_staged.py`), and the
 operational basics (setup, tests, toolchain pins) stay in root `AGENTS.md`.
