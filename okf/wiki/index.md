@@ -8,7 +8,7 @@ okf_version: "0.1"
 - [Agent-smith architecture and component boundaries](architecture.md) — The separation of skills (actions), OKF wiki (context), AGENTS.md (orientation), and harness adapters.
 
 ## Concepts
-- [Harness-specific runtime adapters and profiles](harness-adapters.md) — How subagent/profile adapters are generated for active harnesses without becoming source of truth.
+- [Harness-specific runtime adapters and profiles](harness-adapters.md) — How subagent/profile adapters are generated for active harnesses without becoming source of truth, and how baseline harness-visibility bridging keeps AGENTS.md and .agents/skills/ discoverable.
 - [Skills as portable executable action containers](skills-workflow.md) — How to create, validate, maintain, and discover repeatable Agent Skills for procedures, scripts, and tool orchestrations.
 
 ## Instructions

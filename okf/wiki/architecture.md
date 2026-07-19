@@ -3,7 +3,7 @@ type: Architecture
 title: Agent-smith architecture and component boundaries
 description: The separation of skills (actions), OKF wiki (context), AGENTS.md
   (orientation), and harness adapters.
-timestamp: 2026-07-19T10:30:52.000Z
+timestamp: 2026-07-19T15:26:59.000Z
 sources:
   - README.md
   - AGENTS.md
@@ -55,10 +55,9 @@ Keep knowledge split by purpose to minimize context load and enable progressive 
 - Never deep-link to individual wiki pages; point to `okf/wiki/index.md` and let it route
 
 ### Harness adapters = Runtime projections
-- Generated only after context + action skills exist
-- Derived from actual harness capabilities (profiles, subagents, personas)
-- Never source of truth: point back to canonical AGENTS.md, wiki, and skills
-- Short: purpose, activation, permissions hint, and instructions to consult primary sources
+- Two distinct duties: baseline harness-visibility bridging (is `AGENTS.md`/`.agents/skills/` natively discoverable? bridge whichever isn't, via a local alias — not optional, applies whenever context + action skills exist) and optional runtime subagent/profile/persona generation (only when the user requests it, after the above)
+- Neither is source of truth: point back to canonical AGENTS.md, wiki, and skills
+- Adapters proper are short: purpose, activation, permissions hint, and instructions to consult primary sources
 - Local-only by default (`.git/info/exclude`), unless team policy is explicit
 - Location: harness-specific; documented under `okf/wiki/tooling/` when recorded
 
@@ -79,8 +78,9 @@ The complete transformable product is three portable skills under `.agents/skill
    - Validates against testing baseline (pressure-test before and after)
    - Reusable across repositories
 
-3. **`subagent-profile-adapter`** — optional harness adapter generation
+3. **`subagent-profile-adapter`** — baseline harness-visibility bridging (not optional) plus optional harness adapter generation
    - Detects active runtime (not just installed binaries)
+   - Bridges instruction-file and skills-directory discovery when the harness can't find `AGENTS.md`/`.agents/skills/` natively
    - Generates native profiles pointing to canonical AGENTS.md, wiki, skills
    - Records tooling evidence under `okf/wiki/tooling/`
    - Runs only after context + action skills are ready

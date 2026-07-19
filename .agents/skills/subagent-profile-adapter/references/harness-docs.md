@@ -24,7 +24,8 @@ Include:
 - supported profile/subagent paths;
 - required frontmatter fields;
 - permissions/tool model if documented;
-- instruction-file behavior if documented;
+- instruction-file behavior if documented: does it read `AGENTS.md` directly, or require another name?
+- skills-directory behavior if documented: does it scan `.agents/skills/` directly, or only its own dedicated directory? Does a newly created directory there need a session/process restart before it's picked up?
 - generation policy chosen by the user.
 
 Do not copy long documentation pages. Summarize only the fields needed for adapter creation and cite/link the source.

@@ -1,6 +1,6 @@
 ---
 name: subagent-profile-adapter
-description: Creates and maintains harness-specific subagent/profile adapters after agent-ready context and custom action skills exist. Use when the active harness supports local subagents, personas, agent profiles, or task-scoped execution contexts and the user wants those runtime adapters generated without making them a source of truth.
+description: Creates and maintains harness-specific subagent/profile adapters after agent-ready context and custom action skills exist, and separately checks whether the active harness can natively discover AGENTS.md and .agents/skills/ at all - bridging either with a local alias when it can't. The bridging check is baseline compatibility and applies whenever agent-ready-context finishes a pass, regardless of whether runtime adapters are also wanted; full subagent/profile/persona generation stays optional, used only when the user separately requests it, without either becoming a source of truth.
 license: See LICENSING.md
 compatibility: Requires an Agent Skills compatible harness, repository file read/write access, and Python 3.11+ for optional validation helpers (run them with uv when available). Requires web access or local harness documentation when current subagent/profile semantics are unknown.
 metadata:
@@ -11,7 +11,7 @@ metadata:
   source: https://github.com/rmonier/agent-smith
   subagent-profile-adapter.companion-skills: agent-ready-context, skill-creator
   subagent-profile-adapter.companion-skill-roles: agent-ready-context=preferred upstream context workflow; skill-creator=preferred upstream action-skill workflow
-  subagent-profile-adapter.provides: runtime-context-inspection, tooling-context-policy, harness-adapter-generation
+  subagent-profile-adapter.provides: runtime-context-inspection, tooling-context-policy, harness-visibility-bridging, harness-adapter-generation
   subagent-profile-adapter.runtime-detection: references/runtime-detection.md
   subagent-profile-adapter.tooling-context-policy: references/tooling-context-policy.md
 allowed-tools: Read Write Edit Bash(uv:*) Bash(python:*) Bash(git:*) Bash(readlink:*) Bash(test:*) Bash(mkdir:*) WebFetch WebSearch
@@ -40,6 +40,11 @@ Run this skill only after:
 2. `okf/wiki/index.md` exists or has been refreshed.
 3. Custom action skills have been created or reviewed by `skill-creator` when repeated actions were found.
 
+This skill covers two things, and only the second is optional:
+
+- **Baseline harness-visibility bridging** (Detect/Check/Bridge, steps 1-3 of the numbered workflow just below — not the prerequisites list above) — check whether the active harness can natively discover root `AGENTS.md` and `.agents/skills/` at all, and bridge the gap when it can't. Do this whenever this skill is invoked after the prerequisites above, whether or not the user separately asked for runtime adapters: without it, the harness cannot see any of what `agent-ready-context` and `skill-creator` just built, and no adapter generated in step 4+ would help either. Best-effort, never blocking: if the harness or its requirements can't be determined, say so instead of silently skipping.
+- **Runtime subagent/profile adapters** (Design/Ask/Write/Validate, steps 4-7) — generated only when the user explicitly wants them, after the above.
+
 Then:
 
 1. **Detect the active runtime, not merely installed tools.**
@@ -49,27 +54,32 @@ Then:
    - Do **not** use `<tool> --version` or the presence of an installed binary as proof of the active harness.
    - If runtime remains ambiguous, ask the user which harness to target.
 
-2. **Check whether the active harness supports local subagents/profiles.**
-   - Use local docs/help if already available in the repo or harness.
-   - Otherwise use official web documentation.
+2. **Check what the active harness natively discovers, using current docs.**
+   - Whether it reads `AGENTS.md` directly, or requires a differently named instruction file.
+   - Whether it scans `.agents/skills/` directly, or only its own dedicated skills directory (harness-specific location, docs may cover more than one candidate location - confirm the one that actually applies).
+   - Whether a newly created directory in either location needs a session/process restart before the harness picks it up - many harnesses only scan for skills at startup, so say so up front rather than after a bridge appears not to have worked.
+   - Follow `references/harness-docs.md` for source priority and the full lookup checklist (instruction-file behavior, skills-directory behavior, restart requirement, plus everything needed for adapter generation).
    - If persistence is useful, record the evidence and summary under `okf/wiki/tooling/harnesses/<harness>.md`; otherwise keep it as transient reasoning/output. Baseline OKF bootstrap writes only the minimal harness build record defined in `references/tooling-context-policy.md` (or justifies its absence in the run report); fuller tooling pages stay adapter work.
 
-3. **Handle agent instruction compatibility.**
-   - `AGENTS.md` remains the canonical orientation file.
-   - If the harness does not support `AGENTS.md` but requires another file, create a local alias only after confirming the correct target from docs or the user.
-   - Prefer a symlink to `AGENTS.md` and add the alias path to `.git/info/exclude` unless the user explicitly wants a tracked adapter.
-   - Use `scripts/ensure_local_alias.py` for a generic local symlink/exclude helper.
+3. **Bridge whatever step 2 found the harness can't discover natively.**
+   - `AGENTS.md` and `.agents/skills/` remain the canonical sources; a bridge is always a local alias pointing back at them, never a copy - one place to edit either way.
+   - Confirm the exact required file/directory name or path from docs or the user before creating anything.
+   - Use `scripts/ensure_local_alias.py` for both cases (it detects file vs. directory from `--source` automatically): a relative symlink first, and for a harness-required skills directory that a symlink can't reach (elevated-privilege platforms), a same-semantics directory alias with no admin rights required - see the script's own docstring for the exact fallback chain and why a directory alias has no text-pointer substitute.
+   - Add the alias path to `.git/info/exclude` unless the user explicitly wants a tracked adapter (the script does this automatically).
+   - If a restart is needed per step 2, tell the user before considering the bridge done.
 
 4. **Design candidate subagent/profile adapters.**
    - Derive them from actual repository needs, OKF pages, and available skills.
    - Good candidates are task-scoped and permission-bounded, for example `okf-curator`, `skill-architect`, `repo-cartographer`, `security-reviewer`, or `dependency-scout`.
    - Do not embed long project context inside profile files. Point to `AGENTS.md`, `okf/wiki/index.md`, and relevant skills.
+   - Follow `references/profile-authoring.md` for the full candidate-design checklist (what each adapter must answer) and anti-bloat rules before writing one.
 
 5. **Ask the user how to track generated harness-specific files.**
    - Local-only via `.git/info/exclude`.
    - Ignored for all via `.gitignore`.
    - Committed as shared team adapters.
    - Default to local-only if the user has not chosen a team policy.
+   - Follow `references/git-tracking-policy.md` for the full policy, including the different (gitignore, not exclude) rule for `okf/wiki/tooling/` pages.
 
 6. **Write native adapter files by reasoning from current docs.**
    - Do not rely on hardcoded vendor renderers.

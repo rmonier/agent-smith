@@ -21,17 +21,6 @@ Commit adapters only when the team explicitly standardizes on the harness and wa
 
 `okf/wiki/tooling/` pages follow the same local-default, with one difference: every contributor generates harness build records there, so the shared-ignore case applies — use `.gitignore` (`okf/wiki/tooling/*` with `!okf/wiki/tooling/index.md`), not `.git/info/exclude`. The committed exception is the `tooling/index.md` navigation stub. Committing further tooling pages is the same opt-in consent decision as committing adapters. Full rules in `references/tooling-context-policy.md` ("Git scope").
 
-## Instruction file aliases
+## Instruction-file and skills-directory aliases
 
-If the active harness does not support `AGENTS.md` but requires another instruction filename, prefer a local symlink to `AGENTS.md` and add the alias to `.git/info/exclude`.
-
-Use:
-
-```bash
-uv run .agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py \
-  --repo . \
-  --source AGENTS.md \
-  --alias <harness-required-file>
-```
-
-Only use the alias after confirming the harness requirement through current docs or user instruction.
+Both bridges follow this same local-default tracking policy — see `SKILL.md` step 3 for when and how to create them (`scripts/ensure_local_alias.py` handles a harness-required instruction-file name and a harness-required skills directory the same way, with a directory-specific fallback on Windows). This section is about tracking the *alias itself* once created: local by default, via `.git/info/exclude`, same as any other adapter output above; only commit it under the same explicit team-policy decision.

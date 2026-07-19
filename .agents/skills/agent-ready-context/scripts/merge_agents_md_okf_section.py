@@ -24,6 +24,21 @@ the same conservative promise as everywhere else in this script: only ever
 touch what this script itself placed) before applying the normal logic, so a
 corrupted file always self-heals to one clean pair on the next run instead of
 accumulating more stray markers.
+
+Line-exact marker matching, not substring matching: both `_is_clean_marker_state`
+and the actual replace logic locate markers by line (`line.strip() == START`),
+never by `content.count(START)`/`content.split(START, 1)` over the raw text.
+A real prior bug (reported from a downstream repo, reproduced before fixing):
+a hand-authored line elsewhere in AGENTS.md legitimately *quoted* the marker
+in prose (documenting what the managed section looks like) without being the
+marker itself. Substring counting saw that second occurrence of the exact
+string as a second START, judged the file corrupted, and the repair pass
+correctly stripped the two real marker *lines* — but had no notion of the
+generated body between them, so it stayed behind, orphaned and unmarked; the
+next replace/append check then found no complete pair and appended a whole
+fresh section, duplicating the body. Locating markers by line index instead
+of by substring means a marker mentioned inside a sentence is never mistaken
+for the sentinel line itself, in either the detection or the split.
 """
 from __future__ import annotations
 
@@ -75,33 +90,77 @@ Maintenance rule: when source files, architecture, CI/CD, security controls, ext
 """
 
 
+def _marker_line_indices(lines: list[str], marker: str) -> list[int]:
+    """Indices of lines that *are* `marker`, never lines that merely mention it.
+
+    A line like "the `<!-- okf:start -->` section below is generated" quotes
+    the marker in prose; `line.strip() == marker` requires the whole line to
+    be exactly the sentinel, so that prose is never mistaken for it.
+    """
+    return [i for i, line in enumerate(lines) if line.strip() == marker]
+
+
 def _is_clean_marker_state(content: str) -> bool:
     """True when markers are absent, or present exactly once each in order."""
-    start_count = content.count(START)
-    end_count = content.count(END)
-    if start_count == 0 and end_count == 0:
+    lines = content.splitlines()
+    starts = _marker_line_indices(lines, START)
+    ends = _marker_line_indices(lines, END)
+    if not starts and not ends:
         return True
-    if start_count == 1 and end_count == 1:
-        return content.index(START) < content.index(END)
+    if len(starts) == 1 and len(ends) == 1:
+        return starts[0] < ends[0]
     return False
+
+
+def _first_complete_pair(starts: list[int], ends: list[int]) -> tuple[int, int] | None:
+    """The first START immediately followed (eventually) by an END, if any.
+
+    This is the one old managed section repair can identify with confidence:
+    everything from that START through that END, inclusive, is the code-owned
+    section this script itself wrote on some prior run - both its marker
+    lines and the generated body between them. Any other marker line outside
+    that range (extra duplicates, or one with no partner at all, e.g. from a
+    reversed pair) has no body that can be attributed to it with confidence,
+    so it is only ever dropped bare, never assumed to bracket a section.
+    """
+    for end in ends:
+        earlier_starts = [start for start in starts if start < end]
+        if earlier_starts:
+            return earlier_starts[0], end
+    return None
 
 
 def merge(content: str) -> str:
     if not _is_clean_marker_state(content):
         # Corrupted marker state (stray/duplicate/reversed markers left by an
-        # interrupted prior run, manual edit, or bad merge). These sentinel
-        # lines are code-owned and never legitimate human content, so strip
-        # every marker line - never the prose around it - before falling
-        # through to the normal logic below. This always reduces to zero
-        # markers, so the file self-heals to exactly one clean pair.
-        content = "\n".join(
-            line for line in content.splitlines() if line.strip() not in (START, END)
-        )
+        # interrupted prior run, manual edit, or bad merge). Dropping only
+        # the marker lines here is not enough: the generated body of the one
+        # real old section would survive as orphaned, unmarked content, and
+        # then get duplicated when the fresh section is appended below (a
+        # real, separately confirmed bug - reproduced directly before fixing,
+        # independent of the marker-detection fix above). Remove the first
+        # complete pair wholesale (markers and the body between them), then
+        # strip any other stray marker line bare, before falling through to
+        # the normal logic. This always reduces to zero markers and no
+        # leftover generated body, so the file self-heals to exactly one
+        # clean pair with no duplication.
+        lines = content.splitlines()
+        starts = _marker_line_indices(lines, START)
+        ends = _marker_line_indices(lines, END)
+        pair = _first_complete_pair(starts, ends)
+        if pair is not None:
+            first, last = pair
+            lines = lines[:first] + lines[last + 1 :]
+        lines = [line for line in lines if line.strip() not in (START, END)]
+        content = "\n".join(lines)
         content = content.rstrip() + "\n" if content.strip() else ""
 
-    if START in content and END in content:
-        before = content.split(START, 1)[0].rstrip()
-        after = content.split(END, 1)[1].lstrip()
+    lines = content.splitlines()
+    starts = _marker_line_indices(lines, START)
+    ends = _marker_line_indices(lines, END)
+    if starts and ends and starts[0] < ends[0]:
+        before = "\n".join(lines[: starts[0]]).rstrip()
+        after = "\n".join(lines[ends[0] + 1 :]).lstrip()
         return f"{before}\n\n{SECTION}\n{after}".rstrip() + "\n"
     if content.strip():
         return content.rstrip() + "\n\n" + SECTION + "\n"

@@ -2,18 +2,22 @@
 type: Concepts
 title: Harness-specific runtime adapters and profiles
 description: How subagent/profile adapters are generated for active harnesses
-  without becoming source of truth.
-timestamp: 2026-07-16T07:21:44.902Z
+  without becoming source of truth, and how baseline harness-visibility
+  bridging keeps AGENTS.md and .agents/skills/ discoverable.
+timestamp: 2026-07-19T15:26:59.000Z
 sources:
   - .agents/skills/subagent-profile-adapter/SKILL.md
   - .agents/skills/subagent-profile-adapter/references/runtime-detection.md
   - .agents/skills/subagent-profile-adapter/references/tooling-context-policy.md
+  - .agents/skills/subagent-profile-adapter/references/harness-docs.md
+  - .agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py
+  - tests/test_subagent_profile_adapter.py
   - AGENTS.md
 ---
 
 # Harness Adapters and Runtime Profiles
 
-After agent-ready context and action skills are created, `subagent-profile-adapter` can generate harness-specific runtime adapters (profiles, subagents, personas) that point back to canonical sources without becoming a source of truth themselves.
+After agent-ready context and action skills are created, `subagent-profile-adapter` does two things. First, not optionally: it checks whether the active harness can natively discover root `AGENTS.md` and `.agents/skills/`, and bridges whichever it can't with a local alias — without this, the harness cannot see any of what was just built. Second, only when the user separately wants it: it can generate harness-specific runtime adapters (profiles, subagents, personas) that point back to canonical sources without becoming a source of truth themselves.
 
 ## What are harness adapters?
 
@@ -28,16 +32,18 @@ They are **projections**, not sources of truth. They always point back to:
 - `okf/wiki/index.md` — canonical context front door
 - `.agents/skills/` — canonical action skills
 
-## When to generate adapters
+## When to bridge vs. when to generate adapters
 
-**Prerequisites** (in order):
+**Prerequisites** (in order), for both of the below:
 
 1. `AGENTS.md` exists and has been refreshed by `agent-ready-context`
 2. `okf/wiki/index.md` exists and routes to all major concepts
 3. Custom action skills have been created or reviewed (via `skill-creator`) when repeated actions were found
-4. User explicitly requests harness adapters
 
-Never generate adapters before context and actions are ready. Adapters are the final optional step, not the first.
+Past that point, this skill covers two things, and only the second is optional:
+
+- **Baseline harness-visibility bridging** — check whether the active harness can natively discover root `AGENTS.md` and `.agents/skills/` at all; bridge whichever it can't with a local alias. Do this whenever `subagent-profile-adapter` runs after the prerequisites above, whether or not the user separately wants runtime adapters — without it, the harness cannot see anything `agent-ready-context`/`skill-creator` just built, and no adapter below would help either.
+- **Runtime subagent/profile adapters** — generated only when the user explicitly requests them, after the above. Never generate these before context and actions are ready; they are the final optional step, not the first.
 
 ## Runtime detection (not binary detection)
 
@@ -75,13 +81,22 @@ uv run .agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.p
 
 ### 2. Check harness capabilities
 
-**Does this harness support subagents/profiles?**
+**Baseline (not optional): does this harness natively discover `AGENTS.md` and `.agents/skills/`?**
+
+- Does it read `AGENTS.md` directly, or require a differently named instruction file?
+- Does it scan `.agents/skills/` directly, or only its own dedicated skills directory?
+- Does a newly created directory in either location need a session/process restart before the harness picks it up? Many harnesses only scan for skills at startup — say so up front.
+- Use local docs (in repo or harness) first, then official web documentation.
+
+If either answer is "no," bridge it — see step 5.
+
+**Optional: does this harness support subagents/profiles?**
 
 - Use local docs (in repo or harness)
 - Use official web documentation (official harness docs only)
 - Check version compatibility (some harnesses added profiles in recent versions)
 
-If the harness doesn't support local profiles, use `AGENTS.md` directly or create a symlink/alias and record the decision.
+If the harness doesn't support local profiles, stop here for this part — the baseline bridging above still applies regardless.
 
 ### 3. Record tooling evidence
 
@@ -120,32 +135,27 @@ Derive profiles from actual repository needs and available skills:
 
 Each adapter should have a clear, narrow purpose and delegation to shared sources.
 
-### 5. Handle AGENTS.md alias
+### 5. Bridge instruction-file and skills-directory discovery
 
-If the harness requires a specific instruction file name but you have `AGENTS.md`:
+`scripts/ensure_local_alias.py` handles both gaps step 2 may have found, the same way: a local, git-excluded alias pointing back at the canonical source, never a copy — one place to edit either way. It detects file vs. directory from `--source` automatically.
 
-**Option 1: Symlink** (recommended if allowed)
+**Instruction file**, if the harness requires a specific name instead of `AGENTS.md`:
 ```bash
 uv run .agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py \
-  --source AGENTS.md \
-  --alias <harness-specific-name> \
-  --track local
+  --repo . --source AGENTS.md --alias <harness-required-name>
 ```
+Tries a relative symlink first; falls back to a small Markdown pointer file if symlinks are unavailable (`--fallback fail` to disable that fallback instead).
 
-Add to `.git/info/exclude` so symlink isn't tracked but isn't gitignored globally.
-
-**Option 2: Copy + track**
+**Skills directory**, if the harness only scans its own dedicated directory instead of `.agents/skills/`:
 ```bash
-cp AGENTS.md <harness-specific-name>
+uv run .agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py \
+  --repo . --source .agents/skills --alias <harness-required-skills-dir>
 ```
+Tries a relative symlink first too. On Windows, a directory symlink needs Developer Mode or an elevated process even when a file symlink does not; when it fails, the script falls back to an NTFS junction (`mklink /J`), which needs no elevated privilege. A directory alias has no text-pointer fallback — a harness scanning a directory for skills needs a real directory there — so if neither mechanism works, the script fails loudly with next steps rather than silently producing nothing useful.
 
-Add to `.gitignore` or commit based on team policy (ask user).
+Either way: the alias is recorded in `.git/info/exclude` automatically (ask the user first if a team-tracked adapter is wanted instead — see step 7), and re-running is idempotent once the alias exists. If step 2 found that the harness needs a restart to pick up a new directory, say so now rather than after the bridge appears not to have worked.
 
-**Option 3: Point in config**
-- Harness configuration file points to `AGENTS.md` directly
-- No alias needed if harness supports path configuration
-
-Choose based on harness capabilities and team preference.
+An alternative when the harness supports it: point the harness's own configuration directly at `AGENTS.md`/`.agents/skills/` — no alias needed. Prefer that over an alias when available.
 
 ### 6. Write native adapter files
 
@@ -265,4 +275,7 @@ Profiles are disposable; they can be regenerated anytime without data loss becau
 - `/.agents/skills/subagent-profile-adapter/references/runtime-detection.md` — detecting active harness vs. installed binaries
 - `/.agents/skills/subagent-profile-adapter/references/tooling-context-policy.md` — what goes under okf/wiki/tooling/ and link policy enforcement
 - `/.agents/skills/subagent-profile-adapter/scripts/inspect_runtime_context.py` — runtime context inspection helpers
+- `/.agents/skills/subagent-profile-adapter/references/harness-docs.md` — harness-documentation checklist, including instruction-file and skills-directory discovery
+- `/.agents/skills/subagent-profile-adapter/scripts/ensure_local_alias.py` — file and directory alias creation, symlink/junction fallback mechanism
+- `/tests/test_subagent_profile_adapter.py` — regression coverage for the alias helper, including the junction fallback and its safe removal
 - `/AGENTS.md` — canonical orientation (where adapters point)

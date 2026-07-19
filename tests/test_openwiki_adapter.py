@@ -29,6 +29,7 @@ sys.path.insert(0, str(SCRIPTS))
 import check_prereqs  # noqa: E402
 import establish_openwiki_session as session_establisher  # noqa: E402
 import launch_visible_terminal as terminal_launcher  # noqa: E402
+import merge_agents_md_okf_section as agents_md_merger  # noqa: E402
 import prepare_external_evidence as external_evidence  # noqa: E402
 import run_openwiki_staged as runner  # noqa: E402
 import validate_openwiki_bundle as openwiki_validator  # noqa: E402
@@ -1550,6 +1551,97 @@ class PrerequisiteTests(unittest.TestCase):
                 ok, detail = check_prereqs.openwiki_version(Path(tmp))
         self.assertFalse(ok)
         self.assertEqual(detail, "not found")
+
+
+class AgentsMdMergeTests(unittest.TestCase):
+    # Regression for a real bug reported from a downstream repo: a
+    # hand-authored section elsewhere in AGENTS.md (there, a "## Langue"
+    # note) legitimately quoted the START marker in prose, e.g. "the
+    # `<!-- okf:start -->` section below is generated". Substring counting
+    # (`content.count(START)`) saw that as a second START, judged the file
+    # corrupted, stripped the two real marker *lines* (correct), but had no
+    # notion of the generated body between them, which then sat there
+    # orphaned - the next check found no complete pair and appended a whole
+    # fresh section, duplicating the body. Reproduced directly against the
+    # previously-shipped script before fixing to confirm this exact failure
+    # mode, not a guess.
+
+    def _prose_mentioning_start_marker(self) -> str:
+        return (
+            "## Langue\n\n"
+            f"La section `{agents_md_merger.START}` ci-dessous est une sortie "
+            "fixe generee par le script; ne pas la traduire.\n\n"
+        )
+
+    def test_prose_quoting_the_marker_is_not_treated_as_corruption(self) -> None:
+        existing = agents_md_merger.merge("")
+        combined = self._prose_mentioning_start_marker() + existing
+        self.assertTrue(agents_md_merger._is_clean_marker_state(combined))
+
+    def test_rerun_with_prose_quoting_marker_does_not_duplicate_section(self) -> None:
+        existing = agents_md_merger.merge("")
+        combined = self._prose_mentioning_start_marker() + existing
+        result = agents_md_merger.merge(combined)
+        self.assertEqual(result.count("## Agent-ready knowledge workflow"), 1)
+        self.assertIn("La section", result)
+        self.assertIn(agents_md_merger.START, result)
+        self.assertIn(agents_md_merger.END, result)
+
+    def test_prose_quoting_the_marker_after_the_pair_is_also_safe(self) -> None:
+        existing = agents_md_merger.merge("")
+        combined = existing + "\n" + self._prose_mentioning_start_marker()
+        self.assertTrue(agents_md_merger._is_clean_marker_state(combined))
+        result = agents_md_merger.merge(combined)
+        self.assertEqual(result.count("## Agent-ready knowledge workflow"), 1)
+        self.assertIn("La section", result)
+
+    def test_genuinely_duplicated_marker_lines_still_self_heal(self) -> None:
+        # Regression guard: fixing the false positive must not weaken real
+        # corruption detection (actual stray/duplicate marker lines from an
+        # interrupted run or bad merge).
+        existing = agents_md_merger.merge("")
+        corrupted = existing.replace(agents_md_merger.END, f"{agents_md_merger.END}\n{agents_md_merger.END}", 1)
+        self.assertFalse(agents_md_merger._is_clean_marker_state(corrupted))
+        result = agents_md_merger.merge(corrupted)
+        self.assertEqual(result.count(agents_md_merger.START), 1)
+        self.assertEqual(result.count(agents_md_merger.END), 1)
+        self.assertEqual(result.count("## Agent-ready knowledge workflow"), 1)
+
+    def test_duplicated_start_line_also_self_heals_without_orphaning_body(self) -> None:
+        existing = agents_md_merger.merge("")
+        corrupted = existing.replace(agents_md_merger.START, f"{agents_md_merger.START}\n{agents_md_merger.START}", 1)
+        self.assertFalse(agents_md_merger._is_clean_marker_state(corrupted))
+        result = agents_md_merger.merge(corrupted)
+        self.assertEqual(result.count(agents_md_merger.START), 1)
+        self.assertEqual(result.count(agents_md_merger.END), 1)
+        self.assertEqual(result.count("## Agent-ready knowledge workflow"), 1)
+
+    def test_lone_unpaired_start_with_no_end_self_heals(self) -> None:
+        content = f"# Project\n\n{agents_md_merger.START}\n\nOrphaned body with no closing marker.\n"
+        self.assertFalse(agents_md_merger._is_clean_marker_state(content))
+        result = agents_md_merger.merge(content)
+        self.assertEqual(result.count(agents_md_merger.START), 1)
+        self.assertEqual(result.count(agents_md_merger.END), 1)
+        self.assertEqual(result.count("## Agent-ready knowledge workflow"), 1)
+
+    def test_reversed_markers_still_detected_as_corrupted(self) -> None:
+        content = f"{agents_md_merger.END}\n\nbody\n\n{agents_md_merger.START}\n"
+        self.assertFalse(agents_md_merger._is_clean_marker_state(content))
+
+    def test_clean_state_with_no_markers_is_clean(self) -> None:
+        self.assertTrue(agents_md_merger._is_clean_marker_state("# Just a project README\n"))
+
+    def test_first_run_creates_marked_section(self) -> None:
+        result = agents_md_merger.merge("# My Project\n\nSome existing notes.\n")
+        self.assertEqual(result.count(agents_md_merger.START), 1)
+        self.assertEqual(result.count(agents_md_merger.END), 1)
+        self.assertIn("Some existing notes.", result)
+
+    def test_rerun_on_clean_marked_file_is_stable(self) -> None:
+        first = agents_md_merger.merge("# My Project\n")
+        second = agents_md_merger.merge(first)
+        third = agents_md_merger.merge(second)
+        self.assertEqual(second, third)
 
 
 if __name__ == "__main__":
