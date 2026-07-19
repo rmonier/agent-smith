@@ -20,7 +20,7 @@
 6. If external URLs or documents are provided, materialize each as a reviewed evidence page under `okf/external/` per `references/external-docs.md` before semantic generation.
 7. Preview the exact corpus with the dry-run inventory and add `--exclude` prefixes for anything sensitive or out of scope.
 8. Before provider work, read `references/openwiki-providers.md` and `references/privacy-and-data-flows.md`, disclose the data flow, and obtain consent.
-9. Execute the staged run with the literal stock argv after `--` (`code --init` for a first build, `code --update` for a refresh). The wrapper seeds and byte-protects `openwiki/INSTRUCTIONS.md`, and the stock CLI never runs in the live worktree.
+9. Execute the staged run with the literal stock argv after `--` (`code --init` for a first build, `code --update` for a refresh). The wrapper seeds and byte-protects `openwiki/INSTRUCTIONS.md`, and the stock CLI never runs in the live worktree. Begin every provider prompt by telling the producer to read that contract first and preserve it byte-for-byte; durable rules belong in the contract, while the rest of the prompt names only the current change targets.
 10. Review the run's `review.diff` and candidate pages against source evidence, then promote with `--promote` and validate the live tree with `validate_openwiki_bundle.py`; re-merge root `AGENTS.md`, then inspect `okf/wiki/INSTRUCTIONS.md`.
 11. If no provider is available, generate a skeleton bundle at `okf/wiki/` with `build_okf_skeleton.py` and do not claim semantic completeness.
 

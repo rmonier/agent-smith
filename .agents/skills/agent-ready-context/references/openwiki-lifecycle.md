@@ -210,11 +210,24 @@ pin move:
   producer with typed frontmatter; candidate mapping normalizes them to the
   strict OKF reading (root: `okf_version` only; subdirectories: no
   frontmatter).
+- OpenWiki index middleware also parses reserved `log.md` files as
+  concepts and aborts when their OKF-correct frontmatter is absent. The wrapper
+  gives accepted logs deterministic temporary frontmatter only inside the
+  quarantined stage, then strips it from the mapped candidate before OKF
+  validation and promotion.
 - The producer writes a temporary `openwiki/_plan.md` it is told to delete
   before finishing; mapping drops any straggler.
-- The root index regenerated in the stage cannot reference the user-scoped
-  `tooling/` overlay (the overlay never enters the stage); promotion restores
-  the labeled tooling entry deterministically after re-attaching the overlay.
+- The producer regenerates the root index after every run. When the mapped page
+  set is unchanged, candidate mapping restores the accepted root index
+  byte-for-byte so a content-only refresh cannot churn reviewed routing. When
+  pages are added or removed, the generated index is normalized and promotion
+  restores the labeled user-scoped `tooling/` entry after re-attaching that
+  overlay (which never enters the stage).
+- Candidate mapping normalizes generated Markdown line endings to LF before
+  review, matching the repository normalization baseline. It also compares each
+  generated page with the accepted page: an existing timestamp must advance
+  when the body changes, and must not change when the body does not. Violations
+  fail before candidate creation instead of becoming review noise.
 - Provider credentials, bundled upstream skills, checkpoints, and update
   metadata are written only under the producer home (ignored
   `okf/.openwiki/` by default).

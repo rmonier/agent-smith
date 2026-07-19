@@ -40,7 +40,7 @@ fnm install <node-version-meeting-upstream-minimum>   # producer runtime — htt
 # approval prompt, a scripted install silently skips compiling native
 # dependencies (better-sqlite3, esbuild) instead of erroring - see
 # references/dependencies.md.
-pnpm add --global openwiki@<exact-pinned-version> --allow-build=better-sqlite3 --allow-build=esbuild  # released OKF-capable pin — https://github.com/langchain-ai/openwiki
+pnpm add --global --allow-build=better-sqlite3 --allow-build=esbuild openwiki@<exact-pinned-version>  # released OKF-capable pin — https://github.com/langchain-ai/openwiki
 uv tool install '<python-helper>==<pinned-version>'   # e.g. a pinned markitdown for okf/external/ evidence prep
 ```
 

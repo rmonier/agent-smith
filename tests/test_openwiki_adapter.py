@@ -143,6 +143,23 @@ class CorpusAndStageTests(WorkspaceCase):
         self.assertEqual(git(stage, "remote"), "")
         self.assertEqual((stage / "openwiki/INSTRUCTIONS.md").read_bytes(), instructions)
 
+    def test_stage_adds_stock_only_frontmatter_to_reserved_log(self) -> None:
+        (self.repo / "README.md").write_text("# fixture\n", encoding="utf-8")
+        accepted = wiki_snapshot()
+        accepted_log = b"# Log\n\n## 2026-07-19\n\n- Existing history.\n"
+        accepted["log.md"] = accepted_log
+        runner._write_snapshot(self.repo / "okf/wiki", accepted)
+        index_all(self.repo)
+
+        corpus = runner.collect_corpus(self.repo)
+        stage = self.repo / "okf/.okf-build" / "reserved-log" / "worktree"
+        runner.prepare_stage(self.repo, stage, corpus, None)
+
+        staged_log = (stage / "openwiki/log.md").read_bytes()
+        self.assertTrue(staged_log.startswith(b"---\n"))
+        self.assertTrue(staged_log.endswith(accepted_log))
+        self.assertEqual((self.repo / "okf/wiki/log.md").read_bytes(), accepted_log)
+
     def test_stage_has_no_history_and_no_synthetic_revision(self) -> None:
         (self.repo / "README.md").write_text("# fixture\n", encoding="utf-8")
         index_all(self.repo)
@@ -485,6 +502,7 @@ class CandidateMappingTests(WorkspaceCase):
         runner.materialize_corpus(self.repo, self.stage, corpus)
         accepted = runner.markdown_snapshot(self.repo / "okf/wiki")
         runner._write_snapshot(self.stage / "openwiki", accepted)
+        self.accepted = runner.markdown_snapshot(self.repo / "okf/wiki")
         self.instructions = runner.protected_instructions(self.repo)
         self.pre_run = {
             path.relative_to(self.stage).as_posix()
@@ -519,7 +537,9 @@ class CandidateMappingTests(WorkspaceCase):
         self._write_stock()
         candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
         candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
-        mapped = runner.map_candidate(self.stage, candidate, candidate_state, self.pre_run, self.instructions)
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
         self.assertEqual(mapped["INSTRUCTIONS.md"], self.instructions)
         quickstart = mapped["quickstart.md"].decode()
         self.assertIn("](architecture/overview.md)", quickstart)
@@ -537,6 +557,7 @@ class CandidateMappingTests(WorkspaceCase):
                 self.repo / "okf/.okf-build/run/candidate/state/.last-update.json",
                 self.pre_run,
                 self.instructions,
+                self.accepted,
             )
 
     def test_unknown_openwiki_link_is_not_rewritten(self) -> None:
@@ -556,12 +577,125 @@ class CandidateMappingTests(WorkspaceCase):
         )
         candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
         candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
-        mapped = runner.map_candidate(self.stage, candidate, candidate_state, self.pre_run, self.instructions)
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
         root = mapped["index.md"].decode()
         self.assertTrue(root.startswith('---\nokf_version: "0.1"\n---\n\n# Files'))
         self.assertNotIn("Documentation Index", root)
         sub = mapped["architecture/index.md"].decode()
         self.assertFalse(sub.startswith("---"))
+        self.assertEqual(openwiki_validator.validate_openwiki(candidate), [])
+
+    def test_mapping_preserves_root_index_when_page_set_is_unchanged(self) -> None:
+        stock = self.stage / "openwiki"
+        shutil.rmtree(stock)
+        generated = dict(self.accepted)
+        generated["index.md"] = (
+            b"---\n"
+            b"type: Documentation Index\n"
+            b"title: OpenWiki\n"
+            b"description: Generated index.\n"
+            b"---\n\n"
+            b"# Files\n\n- [Quickstart](quickstart.md)\n"
+        )
+        generated["quickstart.md"] = page(
+            "Quickstart", "Start base.\n\n## Citations\n- `README.md`"
+        )
+        runner._write_snapshot(stock, generated)
+        (stock / ".last-update.json").write_text("{}", encoding="utf-8")
+        candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
+        candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
+
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
+
+        self.assertEqual(mapped["index.md"], self.accepted["index.md"])
+
+    def test_mapping_normalizes_generated_markdown_to_lf(self) -> None:
+        self._write_stock()
+        stock_quickstart = self.stage / "openwiki/quickstart.md"
+        stock_quickstart.write_bytes(stock_quickstart.read_bytes().replace(b"\n", b"\r\n"))
+        candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
+        candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
+
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
+
+        self.assertNotIn(b"\r", mapped["quickstart.md"])
+
+    def test_mapping_rejects_changed_body_with_stale_timestamp(self) -> None:
+        stock = self.stage / "openwiki"
+        shutil.rmtree(stock)
+        accepted = dict(self.accepted)
+        accepted["quickstart.md"] = page(
+            "Quickstart",
+            "Start base.\n\n## Citations\n- `README.md`",
+        ).replace(b"description: Quickstart fixture.\n", b"description: Quickstart fixture.\ntimestamp: 2026-07-16T07:21:44.902Z\n")
+        generated = dict(accepted)
+        generated["quickstart.md"] = generated["quickstart.md"].replace(
+            b"Start base.", b"Start changed."
+        )
+        runner._write_snapshot(stock, generated)
+        (stock / ".last-update.json").write_text("{}", encoding="utf-8")
+
+        with self.assertRaisesRegex(RuntimeError, "without advancing its existing timestamp"):
+            runner.map_candidate(
+                self.stage,
+                self.repo / "okf/.okf-build/run/candidate/wiki",
+                self.repo / "okf/.okf-build/run/candidate/state/.last-update.json",
+                self.pre_run,
+                self.instructions,
+                accepted,
+            )
+
+    def test_mapping_rejects_timestamp_churn_without_body_change(self) -> None:
+        stock = self.stage / "openwiki"
+        shutil.rmtree(stock)
+        accepted = dict(self.accepted)
+        accepted["quickstart.md"] = page(
+            "Quickstart",
+            "Start base.\n\n## Citations\n- `README.md`",
+        ).replace(b"description: Quickstart fixture.\n", b"description: Quickstart fixture.\ntimestamp: 2026-07-16T07:21:44.902Z\n")
+        generated = dict(accepted)
+        generated["quickstart.md"] = generated["quickstart.md"].replace(
+            b"2026-07-16T07:21:44.902Z", b"2026-07-19T10:00:00Z"
+        )
+        runner._write_snapshot(stock, generated)
+        (stock / ".last-update.json").write_text("{}", encoding="utf-8")
+
+        with self.assertRaisesRegex(RuntimeError, "timestamp changed without a body change"):
+            runner.map_candidate(
+                self.stage,
+                self.repo / "okf/.okf-build/run/candidate/wiki",
+                self.repo / "okf/.okf-build/run/candidate/state/.last-update.json",
+                self.pre_run,
+                self.instructions,
+                accepted,
+            )
+
+    def test_mapping_strips_stock_frontmatter_from_reserved_log(self) -> None:
+        self._write_stock()
+        stock = self.stage / "openwiki"
+        stock_log = (
+            b"---\n"
+            b"type: OpenWiki Log\n"
+            b"title: Log\n"
+            b"description: Chronological update history for this wiki.\n"
+            b"---\n\n"
+            b"# Log\n\n## 2026-07-19\n\n- Refreshed.\n"
+        )
+        (stock / "log.md").write_bytes(stock_log)
+        candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
+        candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
+
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
+
+        self.assertEqual(mapped["log.md"], b"# Log\n\n## 2026-07-19\n\n- Refreshed.\n")
         self.assertEqual(openwiki_validator.validate_openwiki(candidate), [])
 
     def test_mapping_drops_stray_producer_plan_scratch_file(self) -> None:
@@ -570,7 +704,9 @@ class CandidateMappingTests(WorkspaceCase):
         (self.stage / "openwiki" / "_plan.md").write_bytes(page("Plan", "scratch with no citations"))
         candidate = self.repo / "okf/.okf-build/run/candidate/wiki"
         candidate_state = self.repo / "okf/.okf-build/run/candidate/state/.last-update.json"
-        mapped = runner.map_candidate(self.stage, candidate, candidate_state, self.pre_run, self.instructions)
+        mapped = runner.map_candidate(
+            self.stage, candidate, candidate_state, self.pre_run, self.instructions, self.accepted
+        )
         self.assertNotIn("_plan.md", mapped)
         self.assertFalse((candidate / "_plan.md").exists())
 

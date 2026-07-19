@@ -89,7 +89,7 @@ Rules:
 
 ## Choosing the OpenWiki pin
 
-The pin must be an exact released version that provides OKF bundle output, installed user-globally from the configured registry (`pnpm add --global openwiki@X.Y.Z --allow-build=better-sqlite3 --allow-build=esbuild`) — no source build. A branch name, PR number, or mutable archive URL is never a pin. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
+The pin must be an exact released version that provides OKF bundle output, installed user-globally from the configured registry (`pnpm add --global --allow-build=better-sqlite3 --allow-build=esbuild openwiki@X.Y.Z`) — no source build. Keep both build approvals before the package name: pnpm 11's isolated global install otherwise accepts the trailing syntax but can silently retain an unbuilt native dependency. A branch name, PR number, or mutable archive URL is never a pin. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
 
 Before accepting any candidate, audit: OKF normalization and reserved-file behavior, no-op/timestamp behavior, manual-edit preservation, provider routing and credential storage, tracing/telemetry defaults (OpenWiki ships opt-out PostHog run telemetry — confirm the `OPENWIKI_TELEMETRY_DISABLED`/`DO_NOT_TRACK` kill-switches gate all senders), filesystem scope, package lifecycle scripts, and whether the CLI actually starts under the locally installed pnpm.
 

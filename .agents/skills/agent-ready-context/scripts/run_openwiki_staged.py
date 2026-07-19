@@ -50,6 +50,13 @@ CANONICAL_WIKI = PurePosixPath("okf/wiki")
 LOCAL_STATE = PurePosixPath("okf/.openwiki/.last-update.json")
 STOCK_STATE = PurePosixPath("openwiki/.last-update.json")
 INSTRUCTIONS = "INSTRUCTIONS.md"
+STOCK_LOG_FRONTMATTER = (
+    b"---\n"
+    b"type: OpenWiki Log\n"
+    b"title: Log\n"
+    b"description: Chronological update history for this wiki.\n"
+    b"---\n\n"
+)
 # Producer scratch files the stock agent is told to delete before finishing
 # (OpenWiki writes a temporary openwiki/_plan.md during a run). A compliant run
 # removes them; dropping any straggler defensively keeps an LLM slip from
@@ -325,6 +332,23 @@ def wiki_snapshot_without_tooling(root: Path) -> dict[str, bytes]:
     }
 
 
+def _stock_compatible_reserved_file(rel: str, raw: bytes) -> bytes:
+    """Adapt reserved OKF files only inside stock OpenWiki's quarantine.
+
+    OKF log.md files intentionally have no frontmatter. OpenWiki 0.2.0's index
+    middleware nevertheless parses every Markdown file except index.md,
+    INSTRUCTIONS.md, and _plan.md as a concept and aborts when log.md has no
+    frontmatter. Give staged log files deterministic temporary metadata; the
+    candidate mapper removes it again before OKF validation and promotion.
+    """
+    if PurePosixPath(rel).name != "log.md":
+        return raw
+    normalized = raw.replace(b"\r\n", b"\n")
+    if normalized.startswith(b"---\n"):
+        return raw
+    return STOCK_LOG_FRONTMATTER + raw
+
+
 def protected_instructions(repo: Path) -> bytes:
     accepted = _inside(repo, repo / CANONICAL_WIKI / INSTRUCTIONS, "accepted OpenWiki instructions")
     source = accepted if accepted.is_file() else INSTRUCTIONS_TEMPLATE
@@ -361,7 +385,10 @@ def prepare_stage(
     _git(stage, "init")
     materialize_corpus(repo, stage, corpus)
 
-    accepted = wiki_snapshot_without_tooling(repo / CANONICAL_WIKI)
+    accepted = {
+        rel: _stock_compatible_reserved_file(rel, raw)
+        for rel, raw in wiki_snapshot_without_tooling(repo / CANONICAL_WIKI).items()
+    }
     instructions = protected_instructions(repo)
     accepted[INSTRUCTIONS] = instructions
     _write_snapshot(stage / STOCK_WIKI, accepted)
@@ -627,20 +654,93 @@ def validate_citations(candidate: Path, pre_run_paths: set[str]) -> None:
                 raise RuntimeError(f"{rel}: source citation was absent before OpenWiki ran: {raw_source}")
 
 
-def _normalize_generated_index(rel: str, text: str) -> str:
-    """Deterministically own reserved-index frontmatter (OKF v0.1 reading).
-
-    The stock producer may type its generated directory indexes; the spec
-    reading enforced by the validator keeps non-root index.md frontmatter-free
-    and limits the root index to the okf_version declaration.
-    """
-    if PurePosixPath(rel).name != "index.md":
-        return text
-    body = text.replace("\r\n", "\n")
+def _without_frontmatter(text: str) -> str:
+    body = text.replace("\r\n", "\n").replace("\r", "\n")
     if body.startswith("---\n"):
         end = body.find("\n---\n", 4)
         if end != -1:
             body = body[end + 5 :].lstrip("\n")
+    return body
+
+
+def _frontmatter_metadata(text: str) -> dict[str, object]:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    if not normalized.startswith("---\n"):
+        return {}
+    end = normalized.find("\n---\n", 4)
+    if end == -1:
+        return {}
+    try:
+        metadata = yaml.safe_load(normalized[4:end])
+    except yaml.YAMLError:
+        return {}  # The generic OKF validator reports the precise YAML error.
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def _ordered_timestamp(value: object) -> datetime | None:
+    parsed: datetime
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def validate_timestamp_contract(
+    mapped: Mapping[str, bytes], accepted: Mapping[str, bytes]
+) -> None:
+    """Enforce body-driven timestamp changes against the accepted baseline."""
+    for rel in sorted(set(mapped) & set(accepted)):
+        if rel == INSTRUCTIONS or PurePosixPath(rel).name in {"index.md", "log.md"}:
+            continue
+        before = accepted[rel].decode("utf-8")
+        after = mapped[rel].decode("utf-8")
+        before_metadata = _frontmatter_metadata(before)
+        after_metadata = _frontmatter_metadata(after)
+        before_has = "timestamp" in before_metadata
+        after_has = "timestamp" in after_metadata
+        body_changed = _without_frontmatter(before) != _without_frontmatter(after)
+
+        if not body_changed:
+            if before_has != after_has or (
+                before_has and before_metadata["timestamp"] != after_metadata["timestamp"]
+            ):
+                raise RuntimeError(f"{rel}: timestamp changed without a body change")
+            continue
+        if not before_has:
+            continue
+        if not after_has:
+            raise RuntimeError(f"{rel}: body changed but its existing timestamp was removed")
+        before_ordered = _ordered_timestamp(before_metadata["timestamp"])
+        after_ordered = _ordered_timestamp(after_metadata["timestamp"])
+        if before_ordered is not None and after_ordered is not None:
+            if after_ordered <= before_ordered:
+                raise RuntimeError(f"{rel}: body changed without advancing its existing timestamp")
+        elif before_metadata["timestamp"] == after_metadata["timestamp"]:
+            raise RuntimeError(f"{rel}: body changed without updating its existing timestamp")
+
+
+def _normalize_generated_reserved_file(rel: str, text: str) -> str:
+    """Deterministically own reserved-file frontmatter (OKF v0.1 reading).
+
+    The stock producer may type its generated directory indexes; the spec
+    reading enforced by the validator keeps non-root index.md frontmatter-free
+    and limits the root index to the okf_version declaration. Stock-only
+    frontmatter on log.md is likewise removed before candidate validation.
+    """
+    name = PurePosixPath(rel).name
+    if name == "log.md":
+        return _without_frontmatter(text)
+    if name != "index.md":
+        return text
+    body = _without_frontmatter(text)
     if rel == "index.md":
         return '---\nokf_version: "0.1"\n---\n\n' + body
     return body
@@ -652,6 +752,7 @@ def map_candidate(
     candidate_state: Path,
     pre_run_paths: set[str],
     instructions: bytes,
+    accepted: Mapping[str, bytes],
 ) -> dict[str, bytes]:
     stock = stage / STOCK_WIKI
     generated = markdown_snapshot(stock)
@@ -664,12 +765,18 @@ def map_candidate(
     for rel, raw in sorted(generated.items()):
         if rel == INSTRUCTIONS or rel in STOCK_SCRATCH:
             continue
-        text = raw.decode("utf-8")
+        text = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         text = _normalize_stock_links(text, rel, known)
         text = _drop_same_run_onboarding(text, pre_run_paths)
-        text = _normalize_generated_index(rel, text)
+        text = _normalize_generated_reserved_file(rel, text)
         mapped[rel] = text.encode("utf-8")
     mapped[INSTRUCTIONS] = instructions
+    if set(mapped) == set(accepted) and "index.md" in accepted:
+        # Stock OpenWiki regenerates index.md after every run, even when the
+        # page set and routing did not change. Preserve the reviewed front door
+        # byte-for-byte in that no-op routing case.
+        mapped["index.md"] = accepted["index.md"]
+    validate_timestamp_contract(mapped, accepted)
     _write_snapshot(candidate, mapped)
     validate_citations(candidate, pre_run_paths)
     state = _validated_state(stage / STOCK_STATE, "stock OpenWiki update state", required=True)
@@ -909,7 +1016,7 @@ def main() -> int:
         run_stock_openwiki(repo, stage, command, args.timeout_seconds, args.credential_home)
         candidate = run_root / "candidate" / "wiki"
         candidate_state = run_root / "candidate" / "state" / ".last-update.json"
-        mapped = map_candidate(stage, candidate, candidate_state, pre_run_paths, instructions)
+        mapped = map_candidate(stage, candidate, candidate_state, pre_run_paths, instructions, baseline)
         validate_candidate(candidate)
         review_diff = run_root / "review.diff"
         write_review_diff(baseline, mapped, review_diff)
