@@ -8,9 +8,10 @@ Use this reference when converting a new or existing repository into an agent-re
 repo/
 ├── AGENTS.md
 ├── .gitignore          # covers pipeline build artifacts
-├── okf/                # OpenKB KB root
-│   └── wiki/           # compiled OKF wiki
-├── graphify-out/
+├── okf/
+│   ├── external/       # reviewed external-evidence docs (tracked, staged)
+│   ├── wiki/           # OKF wiki maintained through OpenWiki
+│   └── .openwiki/      # ignored local producer state and credentials
 └── .agents/
     └── skills/
         ├── agent-ready-context/
@@ -20,8 +21,8 @@ repo/
 ## Responsibility split
 
 - `AGENTS.md` is a routing and rules file. It should tell agents where the durable context lives and which commands to run.
-- `okf/wiki/` is the durable knowledge source of truth for agents.
-- `graphify-out/` is a structural exploration aid, not final authority.
+- `okf/wiki/` is the durable knowledge source of truth for agents, entered through `okf/wiki/index.md`.
+- `okf/external/` holds reviewed external-evidence documents that the staged runs ingest and cite.
 - `.agents/skills/` contains reusable actions.
 
 Do not place large repo documentation, long architectural explanations, or copied external documentation in `AGENTS.md`. Put durable context in `okf/wiki/`.
@@ -34,8 +35,13 @@ Confirm prerequisites first, and install missing tools only after the user agree
 uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .
 
 # After user consent only:
-uv tool install 'graphifyy==<pinned-version>'        # `graphify` CLI — https://github.com/safishamsi/graphify
-uv tool install 'openkb==<pinned-version>'           # `openkb` CLI — https://github.com/VectifyAI/OpenKB
+fnm install <node-version-meeting-upstream-minimum>   # producer runtime — https://github.com/Schniz/fnm
+# --allow-build: without a human to answer pnpm's interactive build-script
+# approval prompt, a scripted install silently skips compiling native
+# dependencies (better-sqlite3, esbuild) instead of erroring - see
+# references/dependencies.md.
+pnpm add --global --allow-build=better-sqlite3 --allow-build=esbuild openwiki@<exact-pinned-version>  # released OKF-capable pin — https://github.com/langchain-ai/openwiki
+uv tool install '<python-helper>==<pinned-version>'   # e.g. a pinned markitdown for okf/external/ evidence prep
 ```
 
 ## Suggested command sequence
@@ -43,30 +49,26 @@ uv tool install 'openkb==<pinned-version>'           # `openkb` CLI — https://
 ```bash
 uv run .agents/skills/agent-ready-context/scripts/merge_agents_md_okf_section.py --repo .
 
-graphify update . --force || true
+# Preview the exact Git-tracked corpus the producer would receive; add
+# --exclude for anything sensitive. Prepare external docs as reviewed
+# evidence pages under okf/external/ before semantic generation.
+uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo .
 
-uv run .agents/skills/agent-ready-context/scripts/build_okf_source_pack.py --repo . --out okf/.okf-build/input
+# After the provider disclosure and consent (references/openwiki-providers.md):
+uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo . --run-id <id> --execute -- openwiki code --init --print "Read openwiki/INSTRUCTIONS.md first and treat it as the user-authored scope contract. Preserve it byte-for-byte. Document only the staged repository; write only under openwiki/."
 
-# Add external docs as evidence Markdown under okf/.okf-build/input/external/ before semantic generation.
-
-# Non-interactive: openkb init's API-key prompt hangs under
-# piped/redirected stdin (no _stdin_is_tty() guard on that prompt, unlike
-# model/language) and this pipeline never wants to supply a key here anyway
-# — see references/workflow.md, "Non-interactive openkb init".
-uv run .agents/skills/agent-ready-context/scripts/init_openkb_noninteractive.py okf --model <litellm-model> --language <lang>
-
-openkb --kb-dir ./okf add ./okf/.okf-build/input/
-openkb --kb-dir ./okf lint
-uv run .agents/skills/agent-ready-context/scripts/preserve_lint_reports.py --repo .
-uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki
+# Review okf/.okf-build/<id>/review.diff and the candidate pages, then:
+uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo . --run-id <id> --promote
+uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .
 uv run .agents/skills/agent-ready-context/scripts/merge_agents_md_okf_section.py --repo .
 ```
 
 If no LLM provider is configured, use the conservative fallback:
 
 ```bash
-uv run .agents/skills/agent-ready-context/scripts/build_okf_skeleton.py --repo . --input okf/.okf-build/input --out okf/wiki
-uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki
+uv run .agents/skills/agent-ready-context/scripts/build_okf_skeleton.py --repo . --dry-run
+uv run .agents/skills/agent-ready-context/scripts/build_okf_skeleton.py --repo .
+uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .
 ```
 
 ## Commit guidance
@@ -76,15 +78,13 @@ Ensure `.gitignore` contains at least:
 ```gitignore
 # agent-ready pipeline build artifacts
 okf/.okf-build/
-okf/output/
-okf/wiki/reports/
-graphify-out/cost.json
-graphify-out/cache/
-__pycache__/
+
+# OpenWiki local producer and OAuth state
+okf/.openwiki/
 
 # local provider credentials
 .env
-okf/.env
+__pycache__/
 ```
 
 Usually commit:
@@ -92,20 +92,15 @@ Usually commit:
 - `AGENTS.md`
 - `.agents/skills/agent-ready-context/`
 - `.agents/skills/skill-creator/`
-- `graphify-out/GRAPH_REPORT.md`
-- `graphify-out/graph.json`
-- `okf/raw/`
-- `okf/wiki/`
-- `okf/.openkb/config.yaml`
-- `okf/.openkb/hashes.json`
+- `okf/wiki/` (including `index.md`, `quickstart.md`, and `INSTRUCTIONS.md`)
+- `okf/external/`
 
 Usually do not commit:
 
 - `okf/.okf-build/`
-- `okf/output/`
-- `okf/wiki/reports/`
+- `okf/.openwiki/` contents (credential state, update state)
 - provider secrets
-- cost/cache files containing local environment details, such as `graphify-out/cost.json`
+- local evaluation artifacts or prompts containing private source
 
 ## Skill lifecycle after OKF generation
 
@@ -115,7 +110,7 @@ Use this split:
 
 - **Keep in OKF wiki**: architecture facts, external documentation evidence, design decisions, runbook context, why a workflow exists, and source provenance.
 - **Move to or create a skill**: repeated commands, multi-step procedures, validation workflows, transformations, migrations, scaffolding, or any task the agent/harness should execute in the same way again.
-- **Keep in AGENTS.md**: short routing rules, the operational basics the AGENTS.md spec expects in-file (primary language and toolchain versions, setup/build/launch commands, the test invocation), and pointers to `okf/wiki/`, `graphify-out/`, and `.agents/skills/`. Point to `okf/wiki/index.md` as the front door — never deep-link individual wiki pages from here.
+- **Keep in AGENTS.md**: short routing rules, the operational basics the AGENTS.md spec expects in-file (primary language and toolchain versions, setup/build/launch commands, the test invocation), and pointers to `okf/wiki/` and `.agents/skills/`. Point to `okf/wiki/index.md` as the front door — never deep-link individual wiki pages from here.
 
 Vendor skills are read-only project dependencies. Install/update them with the chosen skill manager, for example `skills.sh` or `npx skill`, and preserve the generated lock file such as `skill-lock.json` when that manager creates one. Do not edit vendor skill contents directly. If behavior must change, create a custom wrapper or companion skill in `.agents/skills/` and document the relationship in `AGENTS.md`.
 

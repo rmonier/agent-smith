@@ -1,24 +1,38 @@
-# OKF validation gate — GitHub Actions template.
-# Install (consent-first) by copying to .github/workflows/okf-validate.yml
+# SPDX-License-Identifier: Apache-2.0
+# OKF validation gate - GitHub Actions template.
+# Install (consent-first) by copying to .github/workflows/openwiki-validate.yml
 # in the target repository; adapt the single `uv run` step for other CI providers.
 #
 # Zero-LLM by design: the validator needs no API key and sends nothing anywhere,
 # and it exits nonzero on structural violations, so it can gate merges.
-# `openkb lint` is deliberately NOT run here: it is an LLM-backed health report
-# that always completes without failing the build — run it locally instead.
-#
-# Action refs use major-version tags; pin them to full commit SHAs if the
-# target organization's policy requires it.
-name: okf-validate
+# No provider command runs here. OpenWiki semantic review is
+# advisory and stays outside the deterministic merge gate.
+name: openwiki-validate
 on:
   pull_request:
     paths:
-      - "okf/**"
+      - "AGENTS.md"
+      - "okf/wiki/**"
+      - ".agents/skills/agent-ready-context/**"
+      - ".github/workflows/openwiki-validate.yml"
+permissions:
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      UV_NO_PROGRESS: "1"
+      UV_PYTHON_DOWNLOADS: never
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.10.11"
+          enable-cache: false
+      - name: Validate agent-ready-context skill
+        run: uv run .agents/skills/skill-creator/scripts/quick_validate.py .agents/skills/agent-ready-context
       - name: Validate OKF bundle (structural, zero-LLM)
-        run: uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki
+        run: uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .

@@ -4,7 +4,7 @@
 # ///
 # SPDX-FileCopyrightText: 2026 Romain Monier <https://github.com/rmonier>
 # SPDX-License-Identifier: Apache-2.0
-"""Adopt an OpenKB Skill Factory skill from okf/output/skills/ into .agents/skills/."""
+"""Adopt a generated skill from an explicit source into .agents/skills/."""
 from __future__ import annotations
 
 import argparse
@@ -23,7 +23,7 @@ def main() -> int:
     )
     parser.add_argument("name", help="Skill directory name under the source location")
     parser.add_argument("--repo", default=".")
-    parser.add_argument("--source", default="okf/output/skills")
+    parser.add_argument("--source", required=True, help="Repository-local parent directory containing the generated skill")
     parser.add_argument("--dest", default=".agents/skills")
     parser.add_argument(
         "--force", action="store_true",
@@ -70,10 +70,9 @@ def main() -> int:
         "trigger-style description, minimal scoped allowed-tools, untrusted-content handling, no secrets."
     )
     print(
-        "Caveat check: compare the skill against the wiki pages it distilled "
-        "(okf/wiki/ concepts, entities, and their sources). Constraints, boundaries, and warnings "
-        "must survive distillation; restore any that were flattened by editing the adopted copy "
-        "(it is project-owned) before committing."
+        "Caveat check: compare the skill against the source material it distilled. "
+        "Constraints, boundaries, and warnings must survive distillation; restore any that were "
+        "flattened by editing the adopted copy (it is project-owned) before committing."
     )
     return 0
 

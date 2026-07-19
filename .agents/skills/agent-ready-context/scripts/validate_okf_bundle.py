@@ -5,7 +5,7 @@
 # ///
 # SPDX-FileCopyrightText: 2026 Romain Monier <https://github.com/rmonier>
 # SPDX-License-Identifier: Apache-2.0
-"""Validate an OKF bundle or OpenKB wiki against local Google OKF conformance rules.
+"""Validate an OKF bundle against the local Google OKF v0.1 baseline.
 
 Run with `uv run` so PyYAML is resolved automatically in an isolated
 environment; with bare python3 the YAML checks degrade when PyYAML is absent.
@@ -26,21 +26,9 @@ Deterministic auditability checks beyond the spec (warnings, gate unchanged):
 - sibling pages whose names collapse to the same normalized slug — likely
   near-duplicate concepts.
 
-It is intentionally OS-agnostic: pathlib, tempfile and subprocess are used
-instead of shell-specific commands. It does not require symlinks.
-
-With --openkb-wiki, root AGENTS.md and OpenKB operational areas are skipped:
-AGENTS.md is the wiki-conventions manual, while sources/ and reports/ are
-evidence/reporting areas rather than concept pages. This mode adds OpenKB
-convention checks:
-- broken [[wikilinks]] are ERRORS (resolution mirrors openkb 0.4.4
-  lint.find_broken_links: targets match a page's wiki-relative path without
-  extension or its bare stem; `|alias` stripped; AGENTS.md/SCHEMA.md/log.md
-  and sources/ + reports/ are not scanned but do provide targets; unlike
-  upstream, fenced/inline code is ignored to avoid false positives);
-- concepts/ and entities/ pages missing the machine-managed non-empty
-  `sources:` frontmatter list are WARNED (OpenKB maintains that list on every
-  generated page; its absence suggests damage or a hand edit).
+It is intentionally OS-agnostic and producer-neutral. Every Markdown file is
+validated solely by its OKF role; vendor-specific compatibility modes belong
+outside this conformance authority.
 """
 from __future__ import annotations
 
@@ -57,37 +45,13 @@ except Exception:  # pragma: no cover - environment dependent
 
 RESERVED = {"index.md", "log.md"}
 DATE_RE = re.compile(r"^##\s+\d{4}-\d{2}-\d{2}\s*$")
-OPENKB_LOG_RE = re.compile(r"^##\s+\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\]\s+\S+.*$")
 MD_LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
-INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
-# Mirrors openkb 0.4.4 lint._EXCLUDED_FILES for wikilink scanning.
-LINK_SCAN_EXCLUDED = {"AGENTS.md", "SCHEMA.md", "log.md"}
 
 
 def normalized_slug(stem: str) -> str:
     """Collapse a file stem for near-duplicate comparison (case, `_` vs `-`)."""
     return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
-
-
-def strip_code(text: str) -> str:
-    """Remove fenced code blocks and inline code spans before link scanning."""
-    lines = []
-    open_fence: str | None = None
-    for line in text.splitlines():
-        match = FENCE_RE.match(line)
-        if match:
-            marker = match.group(1)
-            if open_fence is None:
-                open_fence = marker[0]
-                continue
-            if marker[0] == open_fence:
-                open_fence = None
-                continue
-        if open_fence is None:
-            lines.append(INLINE_CODE_RE.sub("", line))
-    return "\n".join(lines)
 
 
 def has_unclosed_fence(text: str) -> bool:
@@ -103,20 +67,6 @@ def has_unclosed_fence(text: str) -> bool:
         elif marker[0] == open_fence:
             open_fence = None
     return open_fence is not None
-
-
-def wiki_link_targets(root: Path) -> set[str]:
-    """All valid wikilink targets, mirroring openkb lint._all_wiki_pages keys.
-
-    Every .md file contributes its wiki-relative path without extension
-    (posix) and its bare stem.
-    """
-    targets: set[str] = set()
-    for md in root.rglob("*.md"):
-        rel = md.relative_to(root)
-        targets.add(rel.with_suffix("").as_posix())
-        targets.add(md.stem)
-    return targets
 
 
 def split_frontmatter(text: str) -> tuple[str, str] | None:
@@ -140,7 +90,13 @@ def load_yaml(raw: str, rel: str, errors: list[str]) -> dict[str, Any] | None:
     try:
         data = yaml.safe_load(raw)
     except Exception as exc:  # pragma: no cover - error formatting
-        errors.append(f"{rel}: invalid YAML frontmatter: {exc}")
+        message = f"{rel}: invalid YAML frontmatter: {exc}"
+        if "mapping values are not allowed here" in str(exc):
+            message += (
+                " - likely an unquoted colon inside a string value (title, description, ...); "
+                "wrap that value in double quotes so it can't be misread as a nested mapping"
+            )
+        errors.append(message)
         return None
     if data is None:
         return {}
@@ -184,7 +140,6 @@ def validate_log(
     text: str,
     errors: list[str],
     warnings: list[str],
-    openkb_wiki: bool = False,
 ) -> None:
     if split_frontmatter(text) is not None:
         errors.append(f"{rel}: reserved log.md must not contain YAML frontmatter")
@@ -194,12 +149,7 @@ def validate_log(
             continue
         if DATE_RE.match(line):
             continue
-        if openkb_wiki and OPENKB_LOG_RE.match(line):
-            continue
-        if openkb_wiki:
-            errors.append(f"{rel}: OpenKB log heading has unexpected format: {line}")
-        else:
-            errors.append(f"{rel}: log date heading must be ISO 8601 YYYY-MM-DD: {line}")
+        errors.append(f"{rel}: log date heading must be ISO 8601 YYYY-MM-DD: {line}")
     if lines and not any(line.startswith("#") for line in lines):
         warnings.append(f"{rel}: log.md should contain a Markdown title/heading")
 
@@ -210,100 +160,44 @@ def validate_concept(
     text: str,
     errors: list[str],
     warnings: list[str],
-    openkb_wiki: bool = False,
 ) -> None:
-    # explorations/ is OpenKB's agent-writable notes namespace, not compiled
-    # concept output: `query --save` writes only a `query:` header (0.4.4
-    # cli.py) and finding capture pages carry `type: Finding` by convention,
-    # so frontmatter shape issues there are advisory, not structural.
-    exploration = openkb_wiki and rel.startswith("explorations/")
     parts = split_frontmatter(text)
     if parts is None:
-        if exploration:
-            warnings.append(
-                f"{rel}: explorations page has no YAML frontmatter; saved queries "
-                "carry 'query:' and finding pages carry 'type: Finding'"
-            )
-        else:
-            errors.append(f"{rel}: missing YAML frontmatter block")
+        errors.append(f"{rel}: missing YAML frontmatter block")
         return
     raw_fm, body = parts
     fm = load_yaml(raw_fm, rel, errors)
     if fm is None:
         return
     value = fm.get("type")
-    saved_query = exploration and bool(fm.get("query"))
-    if exploration:
-        if not (saved_query or (isinstance(value, str) and value.strip())):
-            warnings.append(
-                f"{rel}: explorations page should carry 'query:' (saved query) "
-                "or a non-empty 'type:' (finding convention)"
-            )
-    elif value is None or (isinstance(value, str) and not value.strip()):
+    if value is None or (isinstance(value, str) and not value.strip()):
         errors.append(f"{rel}: missing non-empty required frontmatter field 'type'")
     elif not isinstance(value, str):
         warnings.append(f"{rel}: frontmatter field 'type' should be a short descriptive string")
 
-    # Soft guidance from the spec; machine-written query saves never carry
-    # title/description, so they are exempt. OpenKB uses the body H1 as the
-    # display title on generated pages, which satisfies the intent of the
-    # optional OKF title field without duplicating it in frontmatter.
-    if not saved_query:
-        for field in ("title", "description"):
-            body_h1_supplies_title = (
-                field == "title"
-                and openkb_wiki
-                and any(re.match(r"^#\s+\S", line) for line in body.splitlines())
-            )
-            if not fm.get(field) and not body_h1_supplies_title:
-                warnings.append(f"{rel}: missing recommended frontmatter field '{field}'")
+    # Soft guidance from the spec; callers may make these warnings strict as a
+    # producer-quality policy, but generic conformance does not require them.
+    for field in ("title", "description"):
+        if not fm.get(field):
+            warnings.append(f"{rel}: missing recommended frontmatter field '{field}'")
     if not body.strip():
         warnings.append(f"{rel}: concept body is empty")
 
-    # OpenKB maintains a `sources:` list on every generated concept/entity
-    # page; a missing or empty list means the page lost its citation chain
-    # (damaged merge, hand edit, or orphaned generation).
-    if openkb_wiki and rel.startswith(("concepts/", "entities/")):
-        sources = fm.get("sources")
-        if not (isinstance(sources, list) and sources):
-            warnings.append(
-                f"{rel}: missing machine-managed non-empty 'sources' frontmatter list; "
-                "the page cannot be traced to a source document"
-            )
 
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate an OKF v0.1 bundle")
-    parser.add_argument("bundle", help="Path to OKF bundle directory")
-    parser.add_argument("--strict-warnings", action="store_true", help="Treat warnings as errors")
-    parser.add_argument(
-        "--openkb-wiki",
-        action="store_true",
-        help="Skip OpenKB operational wiki files: root AGENTS.md, sources/, and reports/",
-    )
-    args = parser.parse_args()
-
-    root = Path(args.bundle).expanduser().resolve()
-    if not root.is_dir():
-        print(f"error: not a directory: {root}", file=sys.stderr)
-        return 2
-
+def validate_bundle(root: Path, *, strict_warnings: bool = False) -> tuple[list[str], list[str], int]:
+    """Return generic OKF errors, warnings, and the Markdown file count."""
+    root = root.expanduser().resolve()
     errors: list[str] = []
     warnings: list[str] = []
+    if not root.is_dir():
+        return [f"not a directory: {root}"], [], 0
     md_files = sorted(root.rglob("*.md"))
     if not md_files:
         errors.append("bundle contains no Markdown files")
 
-    skipped: list[str] = []
     checked: list[Path] = []
-    link_scan: dict[str, str] = {}
     for path in md_files:
         rel = path.relative_to(root).as_posix()
-        if args.openkb_wiki and (
-            rel == "AGENTS.md" or rel.startswith("sources/") or rel.startswith("reports/")
-        ):
-            skipped.append(rel)
-            continue
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError as exc:
@@ -313,15 +207,13 @@ def main() -> int:
         checked.append(path)
         if has_unclosed_fence(text):
             warnings.append(f"{rel}: code fence still open at end of file (possible truncation or bad merge)")
-        if args.openkb_wiki and path.name not in LINK_SCAN_EXCLUDED:
-            link_scan[rel] = text
 
         if path.name == "index.md":
             validate_index(path, rel, text, errors, warnings)
         elif path.name == "log.md":
-            validate_log(rel, text, errors, warnings, openkb_wiki=args.openkb_wiki)
+            validate_log(rel, text, errors, warnings)
         else:
-            validate_concept(path, rel, text, errors, warnings, openkb_wiki=args.openkb_wiki)
+            validate_concept(path, rel, text, errors, warnings)
 
     # Near-duplicate sibling pages: same normalized slug in the same directory.
     by_dir: dict[tuple[Path, str], list[str]] = {}
@@ -337,24 +229,23 @@ def main() -> int:
                 + ", ".join(sorted(names))
             )
 
-    # OpenKB wiki mode: broken wikilinks are structural damage and gate the run.
-    if args.openkb_wiki:
-        targets = wiki_link_targets(root)
-        for rel in sorted(link_scan):
-            for raw_target in WIKILINK_RE.findall(strip_code(link_scan[rel])):
-                target = raw_target.split("|")[0].strip().strip("/")
-                if target and target not in targets:
-                    errors.append(f"{rel}: broken wikilink [[{target}]]")
-
-    if args.strict_warnings:
+    if strict_warnings:
         errors.extend(f"warning treated as error: {w}" for w in warnings)
         warnings = []
 
-    if args.openkb_wiki:
-        print(
-            "OpenKB wiki mode: skipped root AGENTS.md plus sources/ and reports/ "
-            f"operational areas ({len(skipped)} Markdown file(s))."
-        )
+    return errors, warnings, len(md_files)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate an OKF v0.1 bundle")
+    parser.add_argument("bundle", help="Path to OKF bundle directory")
+    parser.add_argument("--strict-warnings", action="store_true", help="Treat warnings as errors")
+    args = parser.parse_args()
+    errors, warnings, markdown_count = validate_bundle(
+        Path(args.bundle),
+        strict_warnings=args.strict_warnings,
+    )
+
     for warning in warnings:
         print(f"warning: {warning}")
     for error in errors:
@@ -363,8 +254,7 @@ def main() -> int:
     if errors:
         print(f"OKF validation failed: {len(errors)} error(s), {len(warnings)} warning(s)", file=sys.stderr)
         return 1
-    validated_count = len(md_files) - len(skipped)
-    print(f"OKF validation passed: {validated_count} Markdown file(s), {len(warnings)} warning(s)")
+    print(f"OKF validation passed: {markdown_count} Markdown file(s), {len(warnings)} warning(s)")
     return 0
 
 

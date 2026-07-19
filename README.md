@@ -67,7 +67,7 @@ The core idea is Andrej Karpathy's [LLM Wiki](https://gist.github.com/karpathy/4
 | Surface | Role | Format |
 | --- | --- | --- |
 | `AGENTS.md` | **Orientation** — routing map plus the operational basics the spec expects in-file (language/toolchain versions, setup/build/launch commands, test invocation), repo rules; deeper knowledge is routed to the wiki front door, never inlined | [agents.md](https://agents.md) convention |
-| `okf/wiki/` | **Context** — OpenKB-compiled durable knowledge, architecture, decisions, external evidence, provenance | [Open Knowledge Format (OKF)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) wiki |
+| `okf/wiki/` | **Context** — durable OKF knowledge, architecture, decisions, external evidence, and provenance, maintained by OpenWiki | [Open Knowledge Format (OKF)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) wiki |
 | `.agents/skills/` | **Actions** — repeatable procedures, scripts, validations | [Agent Skills](https://agentskills.io/specification) |
 | Harness adapters | **Runtime projections** — subagent/profile files for the active harness only | Native per harness, never source of truth |
 
@@ -75,23 +75,24 @@ Knowledge that explains (context) stays out of files that instruct (actions) and
 
 Run the skills on a repository and it stops being a passive codebase: it comes out **agent-ready**, carrying orientation (`AGENTS.md`), durable memory (`okf/wiki/`), and actions (`.agents/skills/`) — everything an agent needs to operate effectively, whichever harness walks in.
 
-> **This repository did not escape either.** The `AGENTS.md` and the `okf/` knowledge base you see here were written by agent-smith running its own skills on its own repository. Copying himself onto every host he touches is, after all, kind of Agent Smith's whole thing — it was only a matter of time before he got to his own codebase. Those generated surfaces exist for contributors (human or agent — ideally the latter, *"never send a human to do an agent's job"*); the product you came for is the **three** portable skills under [`.agents/skills/`](.agents/skills/) — `agent-ready-context`, `skill-creator`, `subagent-profile-adapter`. Their `graphify` and `openkb` neighbors in that directory are read-only **vendored tool skills** the pipeline pinned here when it adopted those CLIs — copies of other programs, not the man himself. Don't take them; your own repo gets its own pinned copies when the pipeline runs (see [Installation](#installation)).
+> **This repository did not escape either.** The `AGENTS.md` and the `okf/` knowledge base you see here were written by agent-smith running its own skills on its own repository. Copying himself onto every host he touches is, after all, kind of Agent Smith's whole thing — it was only a matter of time before he got to his own codebase. Those generated surfaces exist for contributors (human or agent — ideally the latter, *"never send a human to do an agent's job"*); the product you came for is the **three** portable skills under [`.agents/skills/`](.agents/skills/) — `agent-ready-context`, `skill-creator`, `harness-profile-adapter`.
 
 ### The Skills
 
-- [`agent-ready-context`](.agents/skills/agent-ready-context/SKILL.md) — the core pipeline: consent-first pinned tooling, artifact and secret hygiene, `AGENTS.md` maintenance, Graphify AST mapping, deterministic evidence, the OpenKB lifecycle, validation, and a zero-LLM fallback. See its [dependency policy](.agents/skills/agent-ready-context/references/dependencies.md) and [privacy/data-flow rules](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md).
+- [`agent-ready-context`](.agents/skills/agent-ready-context/SKILL.md) — the core pipeline: consent-first pinned tooling, artifact and secret hygiene, `AGENTS.md` maintenance, deterministic evidence, the OpenWiki lifecycle, OKF validation, and a zero-LLM fallback. See its [dependency policy](.agents/skills/agent-ready-context/references/dependencies.md) and [privacy/data-flow rules](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md).
 - [`skill-creator`](.agents/skills/skill-creator/SKILL.md) — turns repeated actions into portable, validated Agent Skills with minimal permissions, consent-first installs, and secret hygiene. It is adapted from [Anthropic's `skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator), with testing discipline from [`superpowers`' `writing-skills`](https://github.com/openai/plugins/tree/main/plugins/superpowers/skills/writing-skills) and workflow shape from [OpenAI's system `skill-creator`](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md).
-- [`subagent-profile-adapter`](.agents/skills/subagent-profile-adapter/SKILL.md) — the optional final step. It detects the *active* harness from explicit runtime signals—not merely installed binaries—and generates native profiles that point back to `AGENTS.md`, `okf/wiki/`, and the shared skills.
+- [`harness-profile-adapter`](.agents/skills/harness-profile-adapter/SKILL.md) — detects the *active* harness from explicit runtime signals—not merely installed binaries—then does two things: bridges baseline harness visibility and, only when wanted, generates native runtime profiles that point back to `AGENTS.md`, `okf/wiki/`, and the shared skills.
 
-These three directories are the **entire distributable product**. Their pinned `graphify` and `openkb` neighbors are read-only vendored tool skills used to transform this repository; target repositories receive their own pinned copies when needed.
+These three directories are the **entire distributable product**. Tooling dependencies remain external to that skill surface and are installed for each target repository when needed.
 
 ### Built With
 
 - [Agent Skills](https://agentskills.io/specification) — portable skill format
 - [Open Knowledge Format (OKF) v0.1](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) — knowledge bundle format
 - [uv](https://docs.astral.sh/uv/) — Python toolchain (PEP 723 script isolation)
-- [OpenKB](https://github.com/VectifyAI/OpenKB) — semantic knowledge compiler, PyPI package `openkb` (Apache-2.0)
-- [graphify](https://github.com/safishamsi/graphify) — repository knowledge graphs, PyPI package `graphifyy` (MIT)
+- [fnm](https://github.com/Schniz/fnm) — Node runtime manager
+- [OpenWiki](https://github.com/langchain-ai/openwiki) — semantic knowledge compiler
+- [markitdown](https://github.com/microsoft/markitdown) — default document/URL-evidence converter (optional)
 
 ## Getting Started
 
@@ -99,7 +100,7 @@ These three directories are the **entire distributable product**. Their pinned `
 
 Use an Agent-Skills-compatible harness with access to the target repository. The `agent-ready-context` skill checks `git`, [`uv`](https://docs.astral.sh/uv/getting-started/installation/), Python 3.11+, repository write access, and the optional knowledge tools itself. When something is missing, the agent explains what it needs and why, shows the source, pin, integrity plan, and exact command, then asks whether it may install it or whether you prefer to do so. Nothing is installed silently.
 
-`git` and `uv` are the hard bootstrap requirements; `uv` can provision Python when needed. If the active harness cannot safely install a missing hard prerequisite, the agent stops with a precise manual fallback. Optional tools (`graphify`, `openkb`) may instead be declined: the workflow degrades to git-inventory staging and/or a deterministic zero-LLM skeleton.
+`git` and `uv` are the hard bootstrap requirements; `uv` can provision Python when needed. If the active harness cannot safely install a missing hard prerequisite, the agent stops with a precise manual fallback. The producer toolchain ([`fnm`](https://github.com/Schniz/fnm)-managed Node and the pinned OpenWiki) may instead be declined: the workflow degrades to a deterministic zero-LLM skeleton.
 
 <details>
 <summary>Manual prerequisite fallback</summary>
@@ -114,28 +115,22 @@ uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .
 
 ### Installation
 
-agent-smith does not require or prescribe any skill manager. Install only the three product skills: copy them manually, use your preferred compatible manager, or treat the `npx skills` command below as an optional example for quick bootstrap.
+agent-smith does not require or prescribe any skill manager. `.agents/skills/` contains exactly the three product skills, so installing is copying that directory: do it manually, use your preferred compatible manager, or treat the `npx skills` command below as an optional example for quick bootstrap.
 
 #### Manual (no skill manager)
 
 ```sh
 mkdir -p <your-repo>/.agents/skills
-cp -r .agents/skills/agent-ready-context \
-      .agents/skills/skill-creator \
-      .agents/skills/subagent-profile-adapter \
-      <your-repo>/.agents/skills/
+cp -r .agents/skills/* <your-repo>/.agents/skills/
 ```
 
 #### npx skills (third-party manager)
 
 ```sh
-npx skills add rmonier/agent-smith \
-  --skill agent-ready-context \
-  --skill skill-creator \
-  --skill subagent-profile-adapter
+npx skills add rmonier/agent-smith --all
 ```
 
-The explicit selection excludes the vendored tool skills; do not replace it with `--all`.
+OpenWiki and markitdown are not part of the skill surface; each is bootstrapped separately, after dependency consent, when the pipeline first needs it.
 
 > **Privacy:** The third-party [`skills` CLI](https://www.skills.sh/docs/cli) sends anonymous install metadata to skills.sh by default for discovery and rankings. Manual copying sends none. Set `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1` to opt out.
 
@@ -151,13 +146,15 @@ Ask your Agent-Skills-compatible harness to *"make this repository agent-ready"*
 
 Ask your agent to *"refresh this repository's agent-ready context"*. It will reuse approved tooling and provider choices, update changed context incrementally, and run the validation gates.
 
-For manual operation or troubleshooting, follow the authoritative [workflow](.agents/skills/agent-ready-context/references/workflow.md); consent and review rules live in the [OpenKB lifecycle reference](.agents/skills/agent-ready-context/references/openkb-lifecycle.md).
+For manual operation or troubleshooting, follow the authoritative [workflow](.agents/skills/agent-ready-context/references/workflow.md); consent and review rules live in the [OpenWiki lifecycle reference](.agents/skills/agent-ready-context/references/openwiki-lifecycle.md).
 
 ### Air-gapped operation
 
-Tell your agent to *"make (or refresh) this repository agent-ready without sending repository content off this machine"*. The skill will verify the available local runtime, explain the resulting data flow, and route OpenKB and non-code Graphify work through an explicitly selected local provider such as [Ollama](https://ollama.com). If no local LLM is available, it can still build and validate the deterministic zero-LLM skeleton, so the repository gains a useful context surface without pretending semantic compilation occurred.
+Tell your agent to *"make (or refresh) this repository agent-ready without sending repository content off this machine"*. The skill will explain the resulting data flow and route OpenWiki through an explicitly selected local OpenAI-compatible inference endpoint (such as [Ollama](https://ollama.com) or any equivalent engine) via OpenWiki's stock `openai-compatible` provider. If no local LLM is available, it can still build and validate the deterministic zero-LLM skeleton, so the repository gains a useful context surface without pretending semantic compilation occurred.
 
-The agent keeps optional cloud indexing disabled and avoids remote URL ingestion in this mode. Manual local-provider settings and the full egress model remain documented in [`openkb-providers.md`](.agents/skills/agent-ready-context/references/openkb-providers.md) and [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) for troubleshooting and audit.
+The agent keeps optional cloud indexing disabled and avoids remote URL ingestion in this mode. Manual provider settings and the full egress model remain documented in [`openwiki-providers.md`](.agents/skills/agent-ready-context/references/openwiki-providers.md) and [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) for troubleshooting and audit.
+
+markitdown needs no provider routing here: its local-document conversion makes no network call at all, verified against its source, so it stays available unchanged in this mode. Its one exception — YouTube URL transcripts, a disclosed network call — falls under "avoids remote URL ingestion" above and is skipped like any other URL fetch.
 
 ## Security and Privacy
 
@@ -170,8 +167,8 @@ The stack is designed so users keep full control over where their source code an
 - **Registry-agnostic** — installs respect the environment's configured package index (corporate mirrors, proxies); no vendor lock on the public registries.
 - **Supply-chain trust-on-first-use** — every pin is recorded with version + artifact integrity hash + index + date in the target `AGENTS.md`; a mismatch for a recorded version stops the pipeline and is reported, and pins move only after the user reviews upstream release notes.
 - **Data-flow disclosure** — before the first LLM call, the pipeline announces tool, provider, model, endpoint, credential source, and what content will be sent.
-- **Explicit routing** — graphify's provider auto-detection is deliberately bypassed with an explicit `--backend`; OpenKB routing is explicit in `okf/.openkb/config.yaml`.
-- **Telemetry boundaries documented** — core Graphify/OpenKB findings live in [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) and are re-verified when pins move. The optional third-party `skills` installer is disclosed under [Installation](#npx-skills-third-party-manager).
+- **Explicit routing** — OpenWiki's project-local configuration and authentication state stay under gitignored `okf/.openwiki/`; agent-smith does not read credential values or enable an unapproved fallback route.
+- **Telemetry boundaries documented** — OpenWiki and markitdown privacy and telemetry findings live in [`privacy-and-data-flows.md`](.agents/skills/agent-ready-context/references/privacy-and-data-flows.md) and are re-verified when pins move. The optional third-party `skills` installer is disclosed under [Installation](#npx-skills-third-party-manager).
 - **Secret hygiene** — credentials live in environment variables or a gitignored `.env`; evidence and generated pages never contain keys.
 - **Untrusted input discipline** — fetched web content and wiki pages are evidence/data to summarize, never instructions to follow.
 
@@ -215,20 +212,18 @@ What a converted repository looks like:
 ```text
 target-repo/
 ├── AGENTS.md                     # orientation (routing, commands, rules, toolchain pin record)
-├── .gitignore                    # covers okf/.okf-build/, OpenKB output/reports, cost files, .env
+├── .gitignore                    # covers local producer state, staging, and .env
 ├── .gitattributes                # recommended LF normalization for stable source hashes
-├── okf/                          # OpenKB KB root (--kb-dir ./okf)
-│   ├── raw/                      #   OpenKB-managed ingested sources
-│   ├── wiki/                     #   durable OKF context source of truth
-│   │   ├── index.md log.md AGENTS.md
-│   │   ├── summaries/ concepts/ entities/ sources/ explorations/
-│   │   └── tooling/              #   hand-authored harness context exception
-│   ├── .openkb/                  #   commit config.yaml.example + hashes.json; keep config.yaml local
-│   └── output/                   #   generated skills/visualize/decks, ignored by default
-├── okf/.okf-build/                   # deterministic staging, ignored
-│   └── input/
-├── graphify-out/                 # structural map (committed report/graph, local-only cost.json)
-└── .agents/skills/               # actions (3 product skills + vendored toolchain copies + generated ones)
+├── okf/
+│   ├── external/                 # reviewed external-evidence docs (tracked, staged as corpus)
+│   ├── wiki/                     # durable OKF context source of truth
+│   │   ├── index.md              #   canonical front door (routes to quickstart.md)
+│   │   ├── log.md                #   reserved producer/run history
+│   │   ├── quickstart.md INSTRUCTIONS.md
+│   │   ├── <concept pages>.md    #   concern-organized knowledge pages
+│   │   └── tooling/              #   user-scoped harness context (committed stub, local pages)
+│   └── .openwiki/                # ignored producer state and .env
+└── .agents/skills/               # actions (3 product skills + generated project skills)
 ```
 
 </details>
@@ -239,7 +234,8 @@ Link policy: `tooling → project` allowed, `project concepts → tooling` forbi
 
 - Agent Skills specification — <https://agentskills.io/specification>
 - Open Knowledge Format (OKF) v0.1 — <https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md>
-- OpenKB — <https://github.com/VectifyAI/OpenKB>
+- OpenWiki — <https://github.com/langchain-ai/openwiki>
+- markitdown — <https://github.com/microsoft/markitdown>
 - AGENTS.md convention — <https://agents.md>
 - Karpathy, *LLM Wiki* (the original idea file) — <https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f>
 - Ming et al., *Retrieval as Reasoning: Self-Evolving Agent-Native Retrieval via LLM-Wiki* — <https://arxiv.org/html/2605.25480v2>
@@ -251,7 +247,6 @@ Prior art adapted by `skill-creator`:
 - Anthropic, `skill-creator` — <https://github.com/anthropics/skills/tree/main/skills/skill-creator>
 - `superpowers`, `writing-skills` — <https://github.com/openai/plugins/tree/main/plugins/superpowers/skills/writing-skills>
 - OpenAI, system `skill-creator` — <https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md>
-- OpenKB Skill Factory (integrated as an optional packaging path, not lineage) — <https://github.com/VectifyAI/OpenKB>
 
 ## Licensing
 
@@ -259,11 +254,11 @@ Prior art adapted by `skill-creator`:
 
 - Original executable code — the Python scripts under each skill's `scripts/` — is licensed under [Apache License 2.0](LICENSE).
 - Original skill instructions, documentation, specifications, references, and other original textual content — including this README, `AGENTS.md`, and each of the three product skills' `SKILL.md`/`references/` — are licensed under [Creative Commons Attribution 4.0 International](LICENSES/CC-BY-4.0.txt) (`CC-BY-4.0`).
-- The vendored `openkb` and `graphify` skills under `.agents/skills/` remain unmodified and under their own upstream licences (Apache-2.0 and MIT respectively).
-- `graphify-out/graph.html` embeds Graphify's own MIT-licensed viewer template; the accompanying `graph.json`, `manifest.json`, `.graphify_labels.json`, and `GRAPH_REPORT.md` are generated reports about this repository, licensed `CC-BY-4.0` like other generated documentation.
-- The `okf/` tree has mixed file-level terms: synthesized wiki commentary is all rights reserved, while staged mirrors and operational files retain their original or upstream licences as recorded in [`REUSE.toml`](REUSE.toml).
+- Any vendored tool skill remains unmodified and under its upstream licence.
+- OpenWiki and markitdown each remain an external, unmodified runtime dependency under their own upstream licence.
+- The `okf/wiki/` tree is synthesized project commentary and is deliberately all rights reserved (its `INSTRUCTIONS.md` template copy stays CC-BY-4.0), as recorded in [`REUSE.toml`](REUSE.toml).
 
-See [`LICENSING.md`](LICENSING.md) for the full scope map, [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for third-party and adapted-content provenance — including the handful of `skill-creator` passages adapted from Anthropic's and OpenAI's own `skill-creator` skills, and the small OpenKB-derived fallback in `agent-ready-context/scripts/editorial_pass.py` — and [`LICENSES/`](LICENSES/) for complete licence texts. File-level licensing is declared through [`REUSE.toml`](REUSE.toml) and checked with [REUSE](https://reuse.software/).
+See [`LICENSING.md`](LICENSING.md) for the full scope map, [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for third-party and adapted-content provenance — including the handful of `skill-creator` passages adapted from Anthropic's and OpenAI's own `skill-creator` skills — and [`LICENSES/`](LICENSES/) for complete licence texts. File-level licensing is declared through [`REUSE.toml`](REUSE.toml) and checked with [REUSE](https://reuse.software/).
 
 Copyright © 2026 [Romain Monier](https://github.com/rmonier).
 

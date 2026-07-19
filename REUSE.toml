@@ -5,8 +5,7 @@ version = 1
 
 # Original Markdown and human-readable textual material: README, AGENTS.md,
 # root licensing policy docs, docs/assets, and the three product skills'
-# SKILL.md / LICENSING.md / references / assets. The openkb and graphify
-# vendor overrides below win over this broader pattern for their paths.
+# SKILL.md / LICENSING.md / references / assets.
 [[annotations]]
 path = [
   "README.md",
@@ -38,212 +37,42 @@ precedence = "closest"
 SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
 SPDX-License-Identifier = "Apache-2.0"
 
-# Repository and per-skill operational metadata/configuration.
+# Repository and per-skill operational metadata/configuration, including the
+# skills' functional template assets (copy-into-repo configuration, not
+# prose). Listed after the assets/** content block so it wins for these files.
 [[annotations]]
 path = [
   "NOTICE",
   "CITATION.cff",
   ".gitignore",
   ".gitattributes",
-  ".graphifyignore",
   ".agents/skills/*/NOTICE",
-  "okf/.openkb/hashes.json",
-  "okf/.openkb/config.yaml.example",
+  ".agents/skills/agent-ready-context/assets/okf-validate.ci.yml",
+  ".agents/skills/agent-ready-context/assets/gitattributes.template",
+  ".agents/skills/skill-creator/assets/skill-lock.example.json",
 ]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
 SPDX-License-Identifier = "Apache-2.0"
 
-# okf/ is internal project context (the OpenKB-compiled wiki and its staged
-# sources), not part of the licensed product surface. See LICENSING.md for
-# why this is deliberately unlicensed rather than CC-BY-4.0.
+# okf/wiki/ is internal project context (the OpenWiki-maintained OKF wiki),
+# not part of the licensed product surface. See LICENSING.md for why this is
+# deliberately unlicensed rather than CC-BY-4.0.
 [[annotations]]
 path = [
   "okf/wiki/**",
-  "okf/raw/**",
 ]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
 SPDX-License-Identifier = "LicenseRef-All-Rights-Reserved"
 
-# Staged mirrors of this repository's own CC-BY-4.0 documentation. These are
-# byte-identical (frontmatter-wrapped) copies of files already licensed
-# CC-BY-4.0 elsewhere in this repo; tagging the copy "all rights reserved"
-# while the original is openly licensed is inconsistent, not protective --
-# anyone can just read the original instead. Mirrors the treatment already
-# given to the vendored openkb/graphify mirrors below.
-#
-# Per the REUSE.toml spec, when multiple [[annotations]] tables in this file
-# match the same covered file, the LAST matching table wins -- not the most
-# specific pattern, regardless of "override"/"closest". So the broad
-# per-skill wildcards below deliberately also catch each skill's scripts/
-# mirrors; the next block (Apache-2.0, listed after this one) reclaims just
-# those by matching later in the file. Same reasoning protects the
-# openkb/graphify vendor overrides further down: their file-specific blocks
-# stay listed after this one, so they still win for their own files even
-# though "agents__skills__*" would otherwise match them too.
+# okf/wiki/INSTRUCTIONS.md is a byte copy of the CC-BY-4.0 template shipped
+# with agent-ready-context; the copy keeps the original's open licence.
+# Listed after the okf/wiki/** block so it wins for this one file.
 [[annotations]]
 path = [
-  "okf/wiki/sources/README-md.md", "okf/raw/README-md.md",
-  "okf/wiki/sources/graphify-report.md", "okf/raw/graphify-report.md",
-  "okf/wiki/sources/repo-snapshot.md", "okf/raw/repo-snapshot.md",
-  "okf/wiki/sources/docs__assets__agent-smith-svg.md", "okf/raw/docs__assets__agent-smith-svg.md",
-  "okf/wiki/sources/agents__skills__agent-ready-context__*", "okf/raw/agents__skills__agent-ready-context__*",
-  "okf/wiki/sources/agents__skills__skill-creator__*", "okf/raw/agents__skills__skill-creator__*",
-  "okf/wiki/sources/agents__skills__subagent-profile-adapter__*", "okf/raw/agents__skills__subagent-profile-adapter__*",
+  "okf/wiki/INSTRUCTIONS.md",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
 SPDX-License-Identifier = "CC-BY-4.0"
-
-# Staged mirrors of this repository's own Apache-2.0 scripts. Must stay
-# listed after the CC-BY-4.0 block above (see its comment) to win for
-# scripts/ files under the three product skills. openkb/graphify have no
-# scripts/ mirrors, so no collision there.
-[[annotations]]
-path = [
-  "okf/wiki/sources/agents__skills__*__scripts__*-py.md", "okf/raw/agents__skills__*__scripts__*-py.md",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
-SPDX-License-Identifier = "Apache-2.0"
-
-# editorial_pass.py's mirror is a special case within the scripts bucket
-# above: the original file is mostly Romain Monier's own code, but embeds a
-# small OpenKB-derived fragment (see THIRD_PARTY_NOTICES.md "agent-ready-
-# context: OpenKB-derived compatibility fallback" for the exact lines).
-# Both this repo's own code and that fragment are Apache-2.0, so the
-# licence identifier doesn't change -- but the copyright line should credit
-# both holders, same as the original file itself should (and the openkb/
-# graphify vendor mirrors already do above). Listed after the scripts block
-# so it wins for just this one file.
-[[annotations]]
-path = [
-  "okf/wiki/sources/agents__skills__agent-ready-context__scripts__editorial_pass-py.md",
-  "okf/raw/agents__skills__agent-ready-context__scripts__editorial_pass-py.md",
-]
-precedence = "override"
-SPDX-FileCopyrightText = ["2026 Romain Monier <https://github.com/rmonier>", "2026 Vectify AI"]
-SPDX-License-Identifier = "Apache-2.0"
-
-# External evidence, staged verbatim from a URL for provenance (not
-# paraphrased -- these must stay byte-identical to what was actually
-# fetched). Each case below was independently verified against the live
-# upstream source, not guessed, per the provenance rule at the bottom of
-# THIRD_PARTY_NOTICES.md. Copyright is split: the YAML frontmatter (type,
-# title, resource, description, tags, timestamp, source, trust) documenting
-# how/when the source was staged is original commentary by Romain Monier;
-# the body is the third party's own text. See THIRD_PARTY_NOTICES.md for
-# the full per-file record.
-
-# OKF v0.1 spec, staged from github.com/GoogleCloudPlatform/knowledge-catalog.
-# That repo's LICENSE.md is the unfilled Apache-2.0 appendix template (no
-# specific copyright holder name/year committed to the license file itself).
-[[annotations]]
-path = [
-  "okf/raw/okf-spec.md", "okf/wiki/sources/okf-spec.md",
-]
-precedence = "override"
-SPDX-FileCopyrightText = ["2026 Romain Monier <https://github.com/rmonier>", "GoogleCloudPlatform/knowledge-catalog contributors"]
-SPDX-License-Identifier = "Apache-2.0"
-
-# Agent Skills specification, staged from agentskills.io / github.com/agentskills/agentskills.
-# That repo splits Apache-2.0 (code) / CC-BY-4.0 (docs); the spec is docs.
-# The Apache-2.0 LICENSE file's copyright line ("Copyright 2025 Anthropic,
-# PBC") was independently verified; the docs-specific licence file was not
-# separately fetched, so this copyright line is a same-repo inference, not
-# independently confirmed -- re-verify if that repo's ownership changes.
-[[annotations]]
-path = [
-  "okf/raw/agent-skills-spec.md", "okf/wiki/sources/agent-skills-spec.md",
-]
-precedence = "override"
-SPDX-FileCopyrightText = ["2026 Romain Monier <https://github.com/rmonier>", "2025 Anthropic, PBC"]
-SPDX-License-Identifier = "CC-BY-4.0"
-
-# Andrej Karpathy's "LLM Wiki" gist. No licence is stated anywhere on the
-# gist page. See LICENSES/LicenseRef-Karpathy-Gist-No-License-Stated.txt for
-# the full situation, including the gist's own "designed to be copy pasted"
-# text.
-[[annotations]]
-path = [
-  "okf/raw/karpathy-llm-wiki-gist.md", "okf/wiki/sources/karpathy-llm-wiki-gist.md",
-]
-precedence = "override"
-SPDX-FileCopyrightText = ["2026 Romain Monier <https://github.com/rmonier>", "Andrej Karpathy"]
-SPDX-License-Identifier = "LicenseRef-Karpathy-Gist-No-License-Stated"
-
-# Graphify-generated data/report about this repository (no vendor
-# boilerplate, unlike graph.html below).
-[[annotations]]
-path = [
-  "graphify-out/.graphify_labels.json",
-  "graphify-out/.graphify_root",
-  "graphify-out/GRAPH_REPORT.md",
-  "graphify-out/graph.json",
-  "graphify-out/manifest.json",
-]
-precedence = "closest"
-SPDX-FileCopyrightText = "2026 Romain Monier <https://github.com/rmonier>"
-SPDX-License-Identifier = "CC-BY-4.0"
-
-# Graphify's own generated viewer template, embedded verbatim in this
-# file's inline CSS/JS. See THIRD_PARTY_NOTICES.md.
-[[annotations]]
-path = [
-  "graphify-out/graph.html",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Safi Shamsi"
-SPDX-License-Identifier = "MIT"
-
-# Unmodified OpenKB vendor skill (verified byte-for-byte identical to
-# VectifyAI/OpenKB tag v0.4.4, commit bd9fe3989e71fc8012b19eb305662fa307f0a799,
-# skills/openkb/ -- the version pinned in AGENTS.md).
-[[annotations]]
-path = [
-  ".agents/skills/openkb/**",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Vectify AI"
-SPDX-License-Identifier = "Apache-2.0"
-
-# Unmodified Graphify-generated vendor skill (verified byte-for-byte
-# identical to the graphifyy 0.9.10 wheel's agents-harness variant).
-[[annotations]]
-path = [
-  ".agents/skills/graphify/**",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Safi Shamsi"
-SPDX-License-Identifier = "MIT"
-
-# The agent-ready-context pipeline stages a full-text copy of every
-# ingested repository file into okf/wiki/sources/ and okf/raw/, including
-# the vendor skill files themselves -- OpenKB's flattening convention turns
-# ".agents/skills/<name>/..." into "agents__skills__<name>__...", so these
-# name-keyed patterns catch any current or future file staged from that
-# vendor skill without listing individual filenames. They stay under the
-# vendor's own licence, matching the ".agents/skills/openkb/**" override
-# above, rather than the broader okf/ "unlicensed" rule (see
-# THIRD_PARTY_NOTICES.md). When a new vendor skill is vendored for the
-# first time, add its own ".agents/skills/<name>/**" override block and a
-# matching pair of patterns here at the same time.
-[[annotations]]
-path = [
-  "okf/wiki/sources/agents__skills__openkb__*",
-  "okf/raw/agents__skills__openkb__*",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Vectify AI"
-SPDX-License-Identifier = "Apache-2.0"
-
-[[annotations]]
-path = [
-  "okf/wiki/sources/agents__skills__graphify__*",
-  "okf/raw/agents__skills__graphify__*",
-]
-precedence = "override"
-SPDX-FileCopyrightText = "2026 Safi Shamsi"
-SPDX-License-Identifier = "MIT"
-

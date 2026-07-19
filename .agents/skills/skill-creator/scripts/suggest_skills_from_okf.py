@@ -17,7 +17,7 @@ ACTION_PATTERNS = [
     r"\b(validate|verify|check|test|lint)\b",
     r"\b(generate|scaffold|build|compile|export|import|convert|transform)\b",
     r"\b(refresh|update|sync|reconcile|rotate|migrate)\b",
-    r"\b(graphify|openkb|terraform|kubectl|helm|docker|git|uv|python)\b",
+    r"\b(openwiki|terraform|kubectl|helm|docker|git|uv|python)\b",
 ]
 SKIP_CONTEXT = ["architecture", "decision", "evidence", "overview", "concept", "external documentation"]
 
@@ -44,7 +44,7 @@ def main() -> int:
     evidence: dict[str, list[str]] = {}
     for path in okf.rglob("*.md"):
         rel = path.relative_to(okf).as_posix()
-        if path.name in {"index.md", "log.md"} or rel == "AGENTS.md":
+        if path.name in {"index.md", "log.md"} or rel in {"AGENTS.md", "INSTRUCTIONS.md"}:
             continue
         if rel.startswith("sources/") or rel.startswith("reports/"):
             continue

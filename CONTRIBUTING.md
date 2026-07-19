@@ -21,8 +21,8 @@ repeat the workflow itself.
    the two request shapes.
 2. Keep the project's layering intact: **skills** are actions
    (`.agents/skills/`), the **OKF wiki** is durable context (`okf/wiki/`,
-   not hand-edited outside its documented exceptions — see
-   `okf/wiki/AGENTS.md`), and **`AGENTS.md`** is the orientation index.
+   directly editable under its preservation contract — see
+   `okf/wiki/INSTRUCTIONS.md`), and **`AGENTS.md`** is the orientation index.
    Don't blur these.
 3. Preserve house standards for skill changes: consent-first pinned
    installs, registry-agnostic commands, minimal scoped `allowed-tools`,
@@ -41,10 +41,13 @@ uv run .agents/skills/skill-creator/scripts/quick_validate.py .agents/skills/<sk
 uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .
 
 # Adapter/tooling-link policy changes
-uv run .agents/skills/subagent-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+uv run .agents/skills/harness-profile-adapter/scripts/validate_tooling_link_policy.py --repo .
+
+# Changes to the agent-ready-context adapter or validator scripts
+uv run tests/test_openwiki_adapter.py
 
 # OKF bundle changes (only if you touched okf/wiki/ through the documented pipeline)
-uv run .agents/skills/agent-ready-context/scripts/validate_okf_bundle.py okf/wiki --openkb-wiki
+uv run .agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py --repo .
 ```
 
 ## Licensing hygiene
