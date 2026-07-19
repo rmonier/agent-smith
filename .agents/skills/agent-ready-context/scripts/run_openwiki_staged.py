@@ -425,8 +425,18 @@ def run_stock_openwiki(
     timeout_seconds: int,
     credential_home: str = "project",
 ) -> None:
+    argv = list(command)
+    # Windows' CreateProcess does not do PATHEXT-style extension search the
+    # way a shell does: shutil.which resolves a pnpm-installed CLI shim (for
+    # example openwiki.CMD) correctly, but handing subprocess the bare name
+    # fails with WinError 2 ("file not found") even though the shim exists
+    # and is on PATH. Resolve the executable explicitly; POSIX is unaffected
+    # (os.execvp there already searches PATH the same way either way).
+    resolved = shutil.which(argv[0])
+    if resolved is not None:
+        argv[0] = resolved
     completed = subprocess.run(
-        list(command),
+        argv,
         cwd=stage,
         env=child_environment(repo, credential_home),
         timeout=timeout_seconds,

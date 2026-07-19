@@ -125,8 +125,16 @@ Ask before installing. Present each missing tool with its exact package name, in
 
 fnm install <node-version-meeting-upstream-minimum>
 
-# OpenWiki: the released, OKF-capable pin from the configured registry
-pnpm add --global openwiki@<exact-pinned-version>
+# OpenWiki: the released, OKF-capable pin from the configured registry.
+# --allow-build is required: pnpm's global install only runs a dependency's
+# native postinstall/build script after interactive approval, which a
+# scripted/agent-driven install can never provide, silently leaving
+# better-sqlite3 (OpenWiki's checkpointing dependency) and esbuild uncompiled
+# instead of erroring - the resulting failure only surfaces later, deep into
+# an actual run, not at install time. Re-check which packages need this at
+# every pin move (`pnpm add --global --help` lists the flag; a plain install
+# with no --allow-build reveals which packages it would otherwise skip).
+pnpm add --global openwiki@<exact-pinned-version> --allow-build=better-sqlite3 --allow-build=esbuild
 
 # Optional but first-class: markitdown, the default external-evidence
 # converter once installed (references/external-docs.md)
@@ -204,11 +212,13 @@ argv after `--` is the literal stock OpenWiki command; first build uses
 uv run .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py --repo . --run-id <id> --execute -- openwiki code --init --print "Read openwiki/INSTRUCTIONS.md first and treat it as the user-authored scope contract. Preserve it byte-for-byte. Document only the staged repository; write only under openwiki/."
 ```
 
-If the selected provider is an OAuth route (see `references/openwiki-providers.md`) and no session exists yet, that same `--execute` call needs a real interactive terminal for the first run. After disclosure and consent, spawn one with the generic, cross-platform launcher (never OS-input simulation):
+If the selected provider is an OAuth route (see `references/openwiki-providers.md`) and no session exists yet for it, establish the credential first in a dedicated, disposable, empty directory — never inside the staged worktree above, which already has prior wiki content copied into it and will not trigger the OAuth wizard:
 
 ```bash
-uv run .agents/skills/agent-ready-context/scripts/launch_visible_terminal.py --cwd . --env HOME=<credential-home> --env USERPROFILE=<credential-home> --env OPENWIKI_PROVIDER=<selected-route> -- <the same run_openwiki_staged.py --execute command above>
+uv run .agents/skills/agent-ready-context/scripts/establish_openwiki_session.py --repo . --model-id <model-id>
 ```
+
+This prints the exact `launch_visible_terminal.py` command to run next (never OS-input simulation); after disclosure and consent, spawn it and complete the browser sign-in. Once the credential file exists, the real `--execute` run above proceeds non-interactively — never rerun `establish_openwiki_session.py` as part of the regular refresh cycle.
 
 Review the run's `review.diff` and candidate pages, then promote the reviewed candidate transactionally:
 

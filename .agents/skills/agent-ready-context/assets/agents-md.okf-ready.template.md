@@ -33,7 +33,7 @@ The OKF wiki is ordinary versioned Markdown and direct editing is supported. Whe
 - Run repository maintenance scripts through uv: `uv run <script.py>` (never bare `python` when uv is available).
 - Install repo knowledge tooling only when needed and with pinned versions:
   - `fnm install <node-version>` — user-scoped Node runtime for the producer (source: <https://github.com/Schniz/fnm>).
-  - `pnpm add --global openwiki@<pinned-version>` — the OpenWiki producer (source: <https://github.com/langchain-ai/openwiki>).
+  - `pnpm add --global openwiki@<pinned-version> --allow-build=better-sqlite3 --allow-build=esbuild` — the OpenWiki producer (source: <https://github.com/langchain-ai/openwiki>); the `--allow-build` flags are required for a scripted install, since pnpm otherwise only runs those native dependencies' build scripts after an interactive prompt no automated install can answer.
   - `uv tool install '<python-helper>==<pinned-version>'` — pinned Python helper CLIs, e.g. a converter for `okf/external/` evidence prep.
 - Installs go through the package index configured in this environment (corporate mirrors included); do not bypass it.
 - Record the pinned versions and integrity hashes here once chosen (trust-on-first-use; a mismatch for the same version and index is a supply-chain red flag — stop and report, never silently re-pin):

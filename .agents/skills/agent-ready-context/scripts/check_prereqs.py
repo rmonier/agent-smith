@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -45,6 +46,31 @@ def run(cmd: list[str], cwd: Path, timeout: int = 10) -> tuple[bool, str]:
         return True, out.splitlines()[0] if out else "found"
     except Exception as exc:  # noqa: BLE001 - diagnostics only
         return False, f"error: {exc}"
+
+
+def openwiki_version(repo: Path) -> tuple[bool, str]:
+    """openwiki's CLI has no --version flag (it prints "Unknown option:
+    --version" and exits nonzero, which run() would otherwise surface as a
+    misleading not-a-version detail). Its --help banner does print a real
+    "OpenWiki vX.Y.Z" line; extract that instead.
+    """
+    exe = shutil.which("openwiki")
+    if not exe:
+        return False, "not found"
+    try:
+        out = subprocess.run(
+            [exe, "--help"],
+            cwd=repo,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=60,
+            check=False,
+        ).stdout
+    except Exception as exc:  # noqa: BLE001 - diagnostics only
+        return False, f"error: {exc}"
+    match = re.search(r"OpenWiki v\S+", out)
+    return True, match.group(0) if match else "found (no version banner match)"
 
 
 def ensure_writable(path: Path) -> tuple[bool, str]:
@@ -139,13 +165,14 @@ def check(repo: Path) -> dict[str, Any]:
         "node": ["node", "--version"],
         "corepack": ["corepack", "--version"],
         "pnpm": ["pnpm", "--version"],
-        "openwiki": ["openwiki", "--version"],
         "markitdown": ["markitdown", "--version"],
     }.items():
         # openwiki's first invocation can spend longer than 10s on a cold
         # Node.js start; a short timeout would misreport it as missing.
         ok, detail = run(cmd, repo, timeout=60)
         result["optional"][name] = {"ok": ok, "detail": detail}
+
+    result["optional"]["openwiki"] = dict(zip(("ok", "detail"), openwiki_version(repo)))
 
     pnpm_result = result["optional"]["pnpm"]
     if pnpm_result["ok"]:

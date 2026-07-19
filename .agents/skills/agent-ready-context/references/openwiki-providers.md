@@ -108,32 +108,51 @@ There is no separate `openwiki auth <provider>` command for the core model —
 per the pinned CLI's own `--help` output and running `openwiki auth` bare:
 that subcommand only covers unrelated ingestion connectors (`slack`,
 `gmail`, `x`, `notion`), a different credential domain entirely. The core
-model's OAuth
-login is not a standalone command at all — it triggers automatically, inside
-a normal `openwiki code --init`/`--update` call, the first time that call
-needs the model and finds no usable credential. **Establishing the first
-session is therefore not a special "smoke" or "login-only" operation: it is
-simply the first real `run_openwiki_staged.py --execute` run**, done exactly
-as documented elsewhere in this skill, from a real interactive terminal —
-because an OAuth token cannot be pre-supplied any other way; it does not
-exist until a human completes the browser flow at least once:
+model's OAuth login is not a standalone command at all — it triggers
+automatically, inside a normal `openwiki code` call (`--init` and `--update`
+behave identically here), the first time that call needs the model, finds
+no usable credential, and the target `openwiki/` directory is empty. A
+non-empty `openwiki/` directory disables this trigger entirely, regardless
+of `--init`/`--update`: OpenWiki treats existing content there as an
+already-established session and just demands a pre-set access-token env var
+instead of opening the browser flow — independent of TTY status, shell
+choice, or credential-home state.
+
+**Establishing the first session must therefore run in a genuinely empty
+directory, never inside the staged wrapper's own worktree.**
+`run_openwiki_staged.py --execute` always copies the *accepted*
+`okf/wiki/` into the stage's `openwiki/` path first, so incremental updates
+have prior memory to work from — which means once a wiki already exists
+(via any provider), the staged `--execute` run can never also serve as the
+first-time OAuth login for a *different*, not-yet-credentialed provider.
+Never treat a staged `--execute` run as a possible login step — always use
+`scripts/establish_openwiki_session.py` first, whenever no credential
+exists yet for the selected route:
 
 1. Set `OPENWIKI_PROVIDER=<selected-route>` if it is not already the
    resolved default — there is no `--provider` CLI flag in the pinned
    version; provider selection is env-var-only. `--modelId <model-id>` *is*
-   a real CLI flag, for a non-default model.
-2. Run the staged wrapper's `--execute` exactly as documented in
-   `references/workflow.md` and this skill's Commands section — never a
-   separate, hand-rolled directory. The wrapper already builds the isolated,
-   uniquely run-id'd worktree that keeps OpenWiki's hardcoded `openwiki/`
-   output quarantined there; a directory outside that mechanism loses that
-   guarantee and risks colliding with a real `openwiki/` folder if one ever
-   exists at a target repo's root. If OpenWiki's own first-run setup wizard
-   offers to change the wiki output scope/path (shown as "Wiki scope" in its
-   onboarding screen), leave it at its stock default — this skill's mapping
-   and promotion logic assumes that exact convention, and changing it there
-   would silently break it. Every other wizard field the user hasn't been
-   asked about stays at its default too.
+   a real CLI flag, and is required here (see the script's `--model-id`).
+2. Run `uv run scripts/establish_openwiki_session.py --repo . --model-id
+   <model-id>`. It clears and recreates a dedicated, disposable
+   `okf/.okf-build/oauth-smoke/` directory (never the staged wrapper's
+   uniquely run-id'd worktree, and never `okf/wiki/`/`okf/external/`
+   directly) and prints the exact `launch_visible_terminal.py` invocation to
+   run next. This step writes nothing that ever gets promoted; it exists
+   only to produce a credential file. Prefer `--auto-close` over the
+   printed-command form when available (Windows and Linux; not yet
+   supported on macOS — see `launch_visible_terminal.py`'s
+   `terminate_process_tree`): it launches the same command directly, polls
+   for the credential file to appear and stabilize, then closes the window
+   itself, so completing this step correctly does not depend solely on a
+   human noticing and declining OpenWiki's own prompt to continue into a
+   full run. Same two-step consent gate as `launch_visible_terminal.py`:
+   run with `--detect` first, disclose the resolved mechanism, get
+   approval, then run again with `--auto-close`. For the network-boundary
+   case in point 4 below, `--auto-close` enforces this structurally rather
+   than relying on the convention alone: it refuses to launch (exit 3)
+   until a matching acknowledgment flag is also passed, so a warning can
+   never be printed and then launched past in the same call.
 3. The run needs a real interactive terminal, not just a live tool-call
    process, because the CLI renders an Ink-based onboarding UI and needs a
    real TTY to do so. Verify a TTY exists before starting the call (check
@@ -142,35 +161,58 @@ exist until a human completes the browser flow at least once:
    tool cannot give the user a live, visible session, spawn a separate
    visible terminal — see "Launching a visible terminal" below; never do
    this without asking first.
-4. OpenWiki detects the missing session and opens the OAuth authorize URL in
+4. Some environments run the shell that launches OpenWiki on a different
+   network host or namespace than wherever its browser-open call actually
+   lands, so the OAuth callback can fail to cross back to OpenWiki's own
+   `localhost` listener. `establish_openwiki_session.py` detects the
+   specific cases it knows about at runtime and prints a warning — before
+   every launch, not just when `--detect` is run separately — asking
+   whether to continue or fall back to a terminal on the same host as the
+   callback listener; follow what it reports rather than assuming either
+   way in advance.
+5. OpenWiki detects the missing session and opens the OAuth authorize URL in
    the user's default browser itself — self-contained; this skill never
    constructs a login URL. The user completes sign-in there.
-5. OpenWiki's own localhost callback listener completes the token exchange
-   and writes the credential file. The run then proceeds as a normal staged
-   `--execute` — review its `review.diff` and promote like any other run;
-   it is a real candidate, not a throwaway.
-6. Never simulate keyboard or mouse input to drive any of this (no
+6. OpenWiki's own localhost callback listener completes the token exchange
+   and writes the credential file at that point — before the wizard goes on
+   to offer an actual run. Leave every other wizard field at its default
+   (wiki scope/path, any repository-description prompt); none of it matters
+   in this throwaway directory. Under `--auto-close`, the window closes on
+   its own once the credential file is written, so a full run never starts.
+   Without it, tell the human completing this to close the window, or
+   decline any "launch now?" prompt, as soon as the login step shows done —
+   letting a full run proceed here only spends real, billable provider usage
+   generating wiki content nobody needs, describing an empty directory.
+   That's the whole point of this step: once the credential file
+   exists, run the normal staged `--execute` flow (documented elsewhere in
+   this skill) for the real content work; it will proceed non-interactively,
+   reusing the now-established credential. Never rerun
+   `establish_openwiki_session.py` for that — it is a one-time,
+   per-provider bootstrap, not a step in the regular refresh cycle.
+7. Never simulate keyboard or mouse input to drive any of this (no
    `SendKeys`, `AppActivate`, or equivalent OS-level input injection) — that
    takes control of whatever window currently has focus on the user's
    desktop and is unacceptable without the user's explicit, per-action
    consent. If a step genuinely cannot be done non-interactively, stop and
    ask the user to run the exact command themselves.
-7. Redirecting `HOME`/`USERPROFILE` can have unwanted side effects beyond
+8. Redirecting `HOME`/`USERPROFILE` can have unwanted side effects beyond
    OpenWiki itself. Per `--help`, there is no CLI flag or documented env var
    to point OpenWiki's own state at `okf/` any other way, and the resulting
-   credential file was empirically confirmed (existence only, contents never
-   read) to land wherever `HOME`/`USERPROFILE` point at launch time — so
-   this redirect is still the only way to keep OpenWiki's own state under
-   `okf/`. But the operating system or other tools in the process tree may
-   also key their own local caches off that same home directory, and lazily
-   create things there that have nothing to do with OpenWiki or this
-   pipeline. One
-   confirmed example: on Windows, a stray `okf/AppData/` directory appears
-   after the browser step — Windows' own shell/WinINet cache, lazily
-   created the first time a process with `USERPROFILE` redirected touches
-   `ShellExecute`/WinINet, triggered by OpenWiki's own browser-open call.
-   Treat any such unexpected file or directory under the redirected home the
-   same way: harmless, but never assume it belongs in the shared, committed
+   credential file lands wherever `HOME`/`USERPROFILE` point at launch time
+   (existence only ever checked, contents never read) — so this redirect is
+   still the only way to keep OpenWiki's own state under `okf/`. But the
+   operating system or other tools in the process tree may also key their
+   own local caches off that same home directory, and lazily create things
+   there that have nothing to do with OpenWiki or this pipeline. Two
+   examples, both triggered by OpenWiki's own browser-open call:
+   on Windows, a stray `okf/AppData/` directory — Windows' own shell/WinINet
+   cache, lazily created the first time a process with `USERPROFILE`
+   redirected touches `ShellExecute`/WinINet; under WSL, a stray
+   `okf/.config/wslu/` directory — `wslu` (the package providing `wslview`,
+   WSL's `xdg-open` integration that forwards browser-open calls to the
+   Windows browser) caching its own state the first time it runs with `HOME`
+   redirected. Treat any such unexpected file or directory under
+   the redirected home the same way: harmless, but never assume it belongs in the shared, committed
    `.gitignore` — it is a side effect of *this specific machine and OS*, not
    something every clone will see. Add a local-only entry to
    `.git/info/exclude` instead (never committed, per-clone), only once it is
@@ -200,14 +242,10 @@ Try these in order, once approved, stopping at the first that works:
    agent-facing capability that does not give the human a live view).
 2. **`scripts/launch_visible_terminal.py`** — generic, not
    OpenWiki-specific; it spawns a detached, visible terminal for an
-   arbitrary command via `subprocess.CREATE_NEW_CONSOLE` on Windows,
-   `osascript`/Terminal.app on macOS, or on Linux `xdg-terminal-exec` (a
-   freedesktop.org spec that delegates to the user's actual configured
-   default terminal, correct rather than guessed, when present) falling back
-   to a best-effort search through common terminal emulator binaries.
-   Window creation has no bash/sh-native equivalent — it is inherently a
-   windowing-system (X11/Wayland) concern, not a shell one, which is why
-   this needs an external mechanism at all.
+   arbitrary command, preferring whatever mechanism the user actually has
+   configured over one hardcoded choice, on every OS it supports. Its own
+   `--detect` output is the source of truth for exactly what it will use —
+   read that instead of assuming a specific terminal or shell here.
 
    **Always two calls, on every OS, never one** — detection and launching
    are deliberately separate, because which terminal will be used cannot be
@@ -362,12 +400,13 @@ Provider-backed verification is intentionally last:
    for the selected route.
 2. Run the deterministic staging, validation, and no-op checks without
    credentials.
-3. After disclosure and consent, when the user is ready, run the first
-   staged `--execute` from a real interactive terminal. There is no separate
-   "login" step to run beforehand — if no session exists, this single call
-   is also the interactive login: OpenWiki triggers its own OAuth flow
-   automatically partway through (see "Establishing the first session"
-   above).
+3. After disclosure and consent, when the user is ready: for OAuth routes
+   with no session yet, run `establish_openwiki_session.py` first (see
+   "Establishing the first session" above) — the staged `--execute` run
+   cannot trigger OpenWiki's own OAuth wizard itself, since its worktree
+   already has prior wiki content copied in. Once a credential exists (or
+   immediately, for API-key/keyless routes), run the first staged
+   `--execute` from a real interactive terminal.
 4. Review that first run's output like any other staged run — `review.diff`,
    citation grounding — before promoting it or running a larger one.
 

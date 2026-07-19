@@ -83,13 +83,13 @@ Rules:
 
 1. Pin exact versions in any command you leave behind (`pnpm add --global openwiki@X.Y.Z`, `uv tool install 'markitdown==X.Y.Z'`). Floating versions are acceptable only for a one-off interactive install the user explicitly approves. Some exact tool versions may themselves pin an exact prerelease dependency; when uv reports that case, add `--prerelease=allow` while keeping the top-level tool version exact.
 2. Record the pinned versions **and their integrity hashes** in the target repository's `AGENTS.md` setup section (see the pin record below).
-3. Before a first-time install, glance at the upstream repository (README, release notes, install scripts) and surface anything surprising to the user — for OpenWiki that includes package lifecycle scripts, since native dependencies (for example `better-sqlite3`, `esbuild`) may compile or fetch prebuilt assets from disclosed endpoints.
+3. Before a first-time install, glance at the upstream repository (README, release notes, install scripts) and surface anything surprising to the user — for OpenWiki that includes package lifecycle scripts, since native dependencies (`better-sqlite3`, `esbuild`) fetch a prebuilt binary or compile locally from disclosed endpoints. pnpm only runs those scripts after interactive approval on a global install; a scripted/agent-driven install has no one to answer that prompt and silently skips the build instead of erroring, so pass `--allow-build=better-sqlite3 --allow-build=esbuild` explicitly (see the pin command below) rather than relying on the prompt.
 4. Never install with `sudo`. `uv tool install` and pnpm's user-global scope are user-scoped by design.
 5. If a package name, owner, or install command found in older docs conflicts with the table above, trust the upstream repository and report the mismatch.
 
 ## Choosing the OpenWiki pin
 
-The pin must be an exact released version that provides OKF bundle output, installed user-globally from the configured registry (`pnpm add --global openwiki@X.Y.Z`) — no source build. A branch name, PR number, or mutable archive URL is never a pin. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
+The pin must be an exact released version that provides OKF bundle output, installed user-globally from the configured registry (`pnpm add --global openwiki@X.Y.Z --allow-build=better-sqlite3 --allow-build=esbuild`) — no source build. A branch name, PR number, or mutable archive URL is never a pin. The consuming agent selects the exact released version and records it, with its integrity, in the target repository's `AGENTS.md`.
 
 Before accepting any candidate, audit: OKF normalization and reserved-file behavior, no-op/timestamp behavior, manual-edit preservation, provider routing and credential storage, tracing/telemetry defaults (OpenWiki ships opt-out PostHog run telemetry — confirm the `OPENWIKI_TELEMETRY_DISABLED`/`DO_NOT_TRACK` kill-switches gate all senders), filesystem scope, package lifecycle scripts, and whether the CLI actually starts under the locally installed pnpm.
 

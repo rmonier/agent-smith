@@ -36,7 +36,11 @@ uv run .agents/skills/agent-ready-context/scripts/check_prereqs.py --repo .
 
 # After user consent only:
 fnm install <node-version-meeting-upstream-minimum>   # producer runtime — https://github.com/Schniz/fnm
-pnpm add --global openwiki@<exact-pinned-version>     # released OKF-capable pin — https://github.com/langchain-ai/openwiki
+# --allow-build: without a human to answer pnpm's interactive build-script
+# approval prompt, a scripted install silently skips compiling native
+# dependencies (better-sqlite3, esbuild) instead of erroring - see
+# references/dependencies.md.
+pnpm add --global openwiki@<exact-pinned-version> --allow-build=better-sqlite3 --allow-build=esbuild  # released OKF-capable pin — https://github.com/langchain-ai/openwiki
 uv tool install '<python-helper>==<pinned-version>'   # e.g. a pinned markitdown for okf/external/ evidence prep
 ```
 

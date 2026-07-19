@@ -27,6 +27,7 @@ SCRIPTS = ROOT / ".agents" / "skills" / "agent-ready-context" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import check_prereqs  # noqa: E402
+import establish_openwiki_session as session_establisher  # noqa: E402
 import launch_visible_terminal as terminal_launcher  # noqa: E402
 import prepare_external_evidence as external_evidence  # noqa: E402
 import run_openwiki_staged as runner  # noqa: E402
@@ -172,6 +173,303 @@ class CorpusAndStageTests(WorkspaceCase):
                 self.assertEqual(runner.main(), 0)
         self.assertIn("DRY_RUN", stdout.getvalue())
         self.assertFalse((self.repo / "okf/.okf-build").exists())
+
+
+class StockOpenWikiInvocationTests(WorkspaceCase):
+    def test_resolves_executable_before_subprocess_run(self) -> None:
+        # On Windows, subprocess.run(["openwiki", ...]) fails with
+        # WinError 2 even though shutil.which("openwiki") finds a real
+        # pnpm-installed .CMD shim on PATH: CreateProcess does not do a
+        # shell's PATHEXT search on a bare name. Reproduced live against a
+        # real pnpm-11 install; guard the fix structurally so it can't
+        # regress back to the bare-name form.
+        resolved_path = str(self.repo / "resolved-openwiki-shim.CMD")
+        stage = self.repo / "stage"
+        stage.mkdir()
+        with mock.patch.object(runner.shutil, "which", return_value=resolved_path) as which:
+            with mock.patch.object(runner.subprocess, "run") as run:
+                run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
+                runner.run_stock_openwiki(self.repo, stage, ["openwiki", "code", "--update"], 60)
+        which.assert_called_once_with("openwiki")
+        argv, kwargs = run.call_args
+        self.assertEqual(argv[0][0], resolved_path)
+        self.assertEqual(argv[0][1:], ["code", "--update"])
+        self.assertEqual(kwargs["cwd"], stage)
+
+    def test_falls_back_to_bare_name_when_which_finds_nothing(self) -> None:
+        # shutil.which can legitimately return None (PATH misconfigured, or
+        # a POSIX environment where the bare name already resolves via
+        # os.execvp's own PATH search); do not turn a resolution miss into
+        # a hard failure before subprocess even gets a chance to try.
+        stage = self.repo / "stage"
+        stage.mkdir()
+        with mock.patch.object(runner.shutil, "which", return_value=None):
+            with mock.patch.object(runner.subprocess, "run") as run:
+                run.return_value = subprocess.CompletedProcess(args=[], returncode=0)
+                runner.run_stock_openwiki(self.repo, stage, ["openwiki", "code", "--update"], 60)
+        argv, _ = run.call_args
+        self.assertEqual(argv[0][0], "openwiki")
+
+
+class EstablishSessionTests(WorkspaceCase):
+    def test_prepare_smoke_dir_creates_empty_directory(self) -> None:
+        smoke = session_establisher.prepare_smoke_dir(self.repo)
+        self.assertTrue(smoke.is_dir())
+        # Empty except for its own .git (see test_prepare_smoke_dir_has_its_own_git_init).
+        self.assertEqual({p.name for p in smoke.iterdir()}, {".git"})
+        self.assertEqual(smoke, self.repo / "okf" / ".okf-build" / "oauth-smoke")
+
+    def test_prepare_smoke_dir_has_its_own_git_init(self) -> None:
+        # OpenWiki does not respect the literal invocation cwd as its scope:
+        # it walks upward for the enclosing repository's .git and scopes
+        # itself there. Reproduced live: without its own .git, the smoke
+        # directory (a plain subdirectory of this repository) resolved
+        # straight through to the real project root, and OpenWiki wrote a
+        # stray openwiki/ and .github/workflows/ there instead of into the
+        # throwaway directory. A separate .git one level down must exist so
+        # OpenWiki's upward walk stops at the smoke directory itself.
+        smoke = session_establisher.prepare_smoke_dir(self.repo)
+        self.assertTrue((smoke / ".git").exists())
+        self.assertNotEqual((smoke / ".git").resolve(), (self.repo / ".git").resolve())
+
+    def test_prepare_smoke_dir_clears_stale_content(self) -> None:
+        # A prior interrupted attempt could leave OpenWiki-managed content
+        # behind - reproducing the exact non-empty-directory problem this
+        # script exists to avoid, if left uncleared.
+        smoke = self.repo / "okf" / ".okf-build" / "oauth-smoke"
+        smoke.mkdir(parents=True)
+        (smoke / "openwiki").mkdir()
+        (smoke / "openwiki" / "index.md").write_text("stale", encoding="utf-8")
+        result = session_establisher.prepare_smoke_dir(self.repo)
+        self.assertEqual({p.name for p in result.iterdir()}, {".git"})
+
+    def test_build_command_matches_the_known_working_shape(self) -> None:
+        # Matches the one invocation empirically confirmed to trigger
+        # OpenWiki's OAuth wizard: `openwiki code --init --modelId <id>
+        # <message>`, run directly (not through run_openwiki_staged.py) in
+        # a directory with no prior wiki content.
+        command = session_establisher.build_command("gpt-5.4-mini", "hello")
+        self.assertEqual(command, ["openwiki", "code", "--init", "--modelId", "gpt-5.4-mini", "hello"])
+
+    def test_main_prints_the_launcher_command_with_the_right_pieces(self) -> None:
+        stdout = io.StringIO()
+        argv = ["establish_openwiki_session.py", "--repo", str(self.repo), "--model-id", "gpt-5.4-mini"]
+        with mock.patch.object(sys, "argv", argv):
+            with contextlib.redirect_stdout(stdout):
+                code = session_establisher.main()
+        self.assertEqual(code, 0)
+        output = stdout.getvalue()
+        self.assertIn("launch_visible_terminal.py", output)
+        self.assertIn("--env OPENWIKI_PROVIDER=openai-chatgpt", output)
+        self.assertIn(str(self.repo / "okf"), output)
+        self.assertIn("openwiki code --init --modelId gpt-5.4-mini", output)
+        self.assertTrue((self.repo / "okf" / ".okf-build" / "oauth-smoke").is_dir())
+
+    def test_is_wsl_true_when_wsl_distro_name_set(self) -> None:
+        with mock.patch.dict(os.environ, {"WSL_DISTRO_NAME": "Ubuntu"}):
+            self.assertTrue(session_establisher.is_wsl())
+
+    def test_is_wsl_true_from_kernel_release_fallback(self) -> None:
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with mock.patch.object(
+                session_establisher.platform,
+                "uname",
+                return_value=mock.Mock(release="6.18.33.2-microsoft-standard-WSL2"),
+            ):
+                self.assertTrue(session_establisher.is_wsl())
+
+    def test_is_wsl_false_on_a_plain_linux_kernel(self) -> None:
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with mock.patch.object(
+                session_establisher.platform, "uname", return_value=mock.Mock(release="6.8.0-generic")
+            ):
+                self.assertFalse(session_establisher.is_wsl())
+
+    def test_detect_mode_prints_wsl_warning_only_when_detected(self) -> None:
+        argv = ["establish_openwiki_session.py", "--repo", str(self.repo), "--model-id", "gpt-5.4-mini", "--detect"]
+        for wsl, expect_warning in ((True, True), (False, False)):
+            with self.subTest(wsl=wsl):
+                stdout = io.StringIO()
+                with mock.patch.object(session_establisher, "is_wsl", return_value=wsl):
+                    with mock.patch.object(terminal_launcher, "detect", return_value="a new Windows console"):
+                        with mock.patch.object(sys, "argv", argv):
+                            with contextlib.redirect_stdout(stdout):
+                                code = session_establisher.main()
+                self.assertEqual(code, 0)
+                self.assertEqual("WARNING: this looks like WSL" in stdout.getvalue(), expect_warning)
+
+    def test_credential_path_matches_openwikis_own_env_js(self) -> None:
+        home = self.repo / "okf"
+        self.assertEqual(session_establisher.credential_path(home), home / ".openwiki" / ".env")
+
+    def test_wait_for_stable_file_returns_true_once_size_stops_changing(self) -> None:
+        target = self.repo / "credential.env"
+        target.write_text("OPENAI_CHATGPT_ACCESS_TOKEN=\"x\"\n", encoding="utf-8")
+        result = session_establisher.wait_for_stable_file(
+            target, timeout=2.0, poll_interval=0.02, stability_seconds=0.1
+        )
+        self.assertTrue(result)
+
+    def test_wait_for_stable_file_times_out_when_file_never_appears(self) -> None:
+        target = self.repo / "never-appears.env"
+        result = session_establisher.wait_for_stable_file(
+            target, timeout=0.1, poll_interval=0.02, stability_seconds=0.1
+        )
+        self.assertFalse(result)
+
+    def test_launch_dispatches_to_the_right_platform_function(self) -> None:
+        with mock.patch.object(session_establisher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher, "launch_windows", return_value="ok") as launch_windows:
+                result = session_establisher.launch(["openwiki"], Path("/smoke"), {})
+        self.assertEqual(result, "ok")
+        launch_windows.assert_called_once()
+
+    def test_detect_mode_reports_mechanism_and_watched_path_without_launching(self) -> None:
+        stdout = io.StringIO()
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--detect",
+        ]
+        with mock.patch.object(session_establisher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+                with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                    with mock.patch.object(sys, "argv", argv):
+                        with contextlib.redirect_stdout(stdout):
+                            code = session_establisher.main()
+        self.assertEqual(code, 0)
+        popen.assert_not_called()
+        output = stdout.getvalue()
+        self.assertIn("cmd.exe", output)
+        self.assertIn(str(self.repo / "okf" / ".openwiki" / ".env"), output)
+        # --detect must not touch the smoke directory either.
+        self.assertFalse((self.repo / "okf" / ".okf-build" / "oauth-smoke").exists())
+
+    def test_auto_close_terminates_once_credential_is_stable(self) -> None:
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--auto-close",
+            "--timeout",
+            "2",
+        ]
+        process = mock.Mock()
+        env_path = self.repo / "okf" / ".openwiki" / ".env"
+
+        def fake_launch(command: list[str], cwd: Path, env: dict[str, str]) -> mock.Mock:
+            env_path.parent.mkdir(parents=True, exist_ok=True)
+            env_path.write_text("OPENAI_CHATGPT_ACCESS_TOKEN=\"x\"\n", encoding="utf-8")
+            return process
+
+        with mock.patch.object(session_establisher, "is_wsl", return_value=False):
+            with mock.patch.object(session_establisher, "launch", side_effect=fake_launch):
+                with mock.patch.object(
+                    session_establisher, "wait_for_stable_file", return_value=True
+                ) as wait_mock:
+                    with mock.patch.object(
+                        terminal_launcher, "terminate_process_tree", return_value=True
+                    ) as terminate_mock:
+                        with mock.patch.object(sys, "argv", argv):
+                            code = session_establisher.main()
+        self.assertEqual(code, 0)
+        wait_mock.assert_called_once()
+        terminate_mock.assert_called_once_with(process)
+
+    def test_auto_close_leaves_window_open_on_timeout(self) -> None:
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--auto-close",
+            "--timeout",
+            "2",
+        ]
+        process = mock.Mock()
+        with mock.patch.object(session_establisher, "is_wsl", return_value=False):
+            with mock.patch.object(session_establisher, "launch", return_value=process):
+                with mock.patch.object(session_establisher, "wait_for_stable_file", return_value=False):
+                    with mock.patch.object(terminal_launcher, "terminate_process_tree") as terminate_mock:
+                        with mock.patch.object(sys, "argv", argv):
+                            code = session_establisher.main()
+        self.assertEqual(code, 1)
+        terminate_mock.assert_not_called()
+
+    def test_auto_close_reports_when_graceful_stop_does_not_respond(self) -> None:
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--auto-close",
+            "--timeout",
+            "2",
+        ]
+        process = mock.Mock()
+        stderr = io.StringIO()
+        with mock.patch.object(session_establisher, "is_wsl", return_value=False):
+            with mock.patch.object(session_establisher, "launch", return_value=process):
+                with mock.patch.object(session_establisher, "wait_for_stable_file", return_value=True):
+                    with mock.patch.object(terminal_launcher, "terminate_process_tree", return_value=False):
+                        with mock.patch.object(sys, "argv", argv):
+                            with contextlib.redirect_stderr(stderr):
+                                code = session_establisher.main()
+        # Credential is already safely written either way - not a hard failure.
+        self.assertEqual(code, 0)
+        self.assertIn("safe to close manually", stderr.getvalue())
+
+    def test_auto_close_refuses_to_launch_under_wsl_without_acknowledgement(self) -> None:
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--auto-close",
+        ]
+        stderr = io.StringIO()
+        with mock.patch.object(session_establisher, "is_wsl", return_value=True):
+            with mock.patch.object(session_establisher, "launch") as launch_mock:
+                with mock.patch.object(sys, "argv", argv):
+                    with contextlib.redirect_stderr(stderr):
+                        code = session_establisher.main()
+        self.assertEqual(code, 3)
+        launch_mock.assert_not_called()
+        self.assertIn("WARNING: this looks like WSL", stderr.getvalue())
+        self.assertIn("--acknowledge-wsl-risk", stderr.getvalue())
+        # Refusing must happen before the smoke directory is even touched -
+        # nothing should be prepared for a launch that never happens.
+        self.assertFalse((self.repo / "okf" / ".okf-build" / "oauth-smoke").exists())
+
+    def test_auto_close_proceeds_under_wsl_with_acknowledgement(self) -> None:
+        argv = [
+            "establish_openwiki_session.py",
+            "--repo",
+            str(self.repo),
+            "--model-id",
+            "gpt-5.4-mini",
+            "--auto-close",
+            "--acknowledge-wsl-risk",
+            "--timeout",
+            "2",
+        ]
+        process = mock.Mock()
+        with mock.patch.object(session_establisher, "is_wsl", return_value=True):
+            with mock.patch.object(session_establisher, "launch", return_value=process) as launch_mock:
+                with mock.patch.object(session_establisher, "wait_for_stable_file", return_value=True):
+                    with mock.patch.object(terminal_launcher, "terminate_process_tree", return_value=True):
+                        with mock.patch.object(sys, "argv", argv):
+                            code = session_establisher.main()
+        self.assertEqual(code, 0)
+        launch_mock.assert_called_once()
 
 
 class CandidateMappingTests(WorkspaceCase):
@@ -542,19 +840,80 @@ class VisibleTerminalLauncherTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             terminal_launcher.parse_env_overrides(["=value"])
 
-    def test_windows_launch_uses_new_console_and_pauses_after(self) -> None:
-        with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
-            result = terminal_launcher.launch_windows(
-                ["openwiki", "code", "--init"], Path("C:/repo"), {"HOME": "C:/repo/okf"}
-            )
+    def test_windows_launch_falls_back_to_cmd_when_no_powershell_found(self) -> None:
+        with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_windows(
+                    ["openwiki", "code", "--init"], Path("C:/repo"), {"HOME": "C:/repo/okf"}
+                )
         self.assertTrue(result)
         popen.assert_called_once()
         args, kwargs = popen.call_args
         self.assertEqual(args[0][0], "cmd.exe")
-        self.assertIn("openwiki code --init", args[0][2])
-        self.assertIn("pause", args[0][2])
-        self.assertEqual(kwargs["creationflags"], terminal_launcher.subprocess.CREATE_NEW_CONSOLE)
+        self.assertEqual(args[0][1], "/c")
+        batch_path = Path(args[0][2])
+        self.addCleanup(lambda: batch_path.unlink(missing_ok=True))
+        content = batch_path.read_text()
+        self.assertIn("openwiki code --init", content)
+        self.assertIn("pause", content)
+        self.assertIn("del ", content)
+        self.assertEqual(
+            kwargs["creationflags"],
+            terminal_launcher._CREATE_NEW_CONSOLE | terminal_launcher._CREATE_NEW_PROCESS_GROUP,
+        )
         self.assertEqual(kwargs["env"]["HOME"], "C:/repo/okf")
+
+    def test_windows_cmd_batch_file_survives_a_flag_looking_argument(self) -> None:
+        # Regression for a real bug: cmd.exe /c "<already-quoted command> &
+        # pause" as one Popen argv element gets double-quoted by Popen's own
+        # list2cmdline pass. cmd.exe does not honor the resulting \" as an
+        # escaped quote, so an argument containing " - " arrived at the
+        # target program as a detached "-" token ("Unknown option: -").
+        # Writing a batch file means list2cmdline only ever runs once.
+        text = "Update the wiki pages - preserve manual bodies untouched."
+        with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                terminal_launcher.launch_windows(
+                    ["openwiki", "code", "--update", "--print", text], Path("C:/repo"), {}
+                )
+        args, _ = popen.call_args
+        batch_path = Path(args[0][2])
+        self.addCleanup(lambda: batch_path.unlink(missing_ok=True))
+        content = batch_path.read_text()
+        self.assertIn(f'"{text}"', content)
+        self.assertNotIn('\\"', content)
+
+    def test_windows_launch_prefers_pwsh_over_powershell_and_cmd(self) -> None:
+        def which(name: str) -> str | None:
+            return "C:/tools/pwsh.exe" if name == "pwsh" else None
+
+        with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                result = terminal_launcher.launch_windows(
+                    ["openwiki", "code", "--init"], Path("C:/repo"), {"HOME": "C:/repo/okf"}
+                )
+        self.assertTrue(result)
+        args, kwargs = popen.call_args
+        self.assertEqual(args[0][0], "C:/tools/pwsh.exe")
+        self.assertIn("-NoProfile", args[0])
+        self.assertIn("openwiki", args[0][-1])
+        self.assertIn("Read-Host", args[0][-1])
+        self.assertEqual(
+            kwargs["creationflags"],
+            terminal_launcher._CREATE_NEW_CONSOLE | terminal_launcher._CREATE_NEW_PROCESS_GROUP,
+        )
+        self.assertEqual(kwargs["env"]["HOME"], "C:/repo/okf")
+
+    def test_windows_launch_falls_back_to_powershell_when_no_pwsh(self) -> None:
+        def which(name: str) -> str | None:
+            return "C:/tools/powershell.exe" if name == "powershell" else None
+
+        with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                terminal_launcher.launch_windows(["openwiki"], Path("C:/repo"), {})
+        args, _ = popen.call_args
+        self.assertEqual(args[0][0], "C:/tools/powershell.exe")
+        self.assertIn("-NoProfile", args[0])
 
     def test_macos_launch_returns_false_without_osascript(self) -> None:
         with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
@@ -575,6 +934,12 @@ class VisibleTerminalLauncherTests(unittest.TestCase):
         script = args[0][2]
         self.assertIn("Terminal", script)
         self.assertIn("OPENWIKI_PROVIDER", script)
+        # Terminal.app's do script types this into whatever the user's
+        # default login shell is (zsh since Catalina); zsh's read -p means
+        # something different (read from a coprocess, not show a prompt),
+        # so the pause step must run under an explicitly forced bash rather
+        # than depend on the user's shell choice.
+        self.assertIn("bash -c", script)
 
     def test_linux_launch_prefers_xdg_terminal_exec_when_present(self) -> None:
         def which(name: str) -> str | None:
@@ -649,12 +1014,30 @@ class VisibleTerminalLauncherTests(unittest.TestCase):
         argv = ["launch_visible_terminal.py", "--detect"]
         stdout = io.StringIO()
         with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
-            with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
-                with mock.patch.object(sys, "argv", argv):
-                    with contextlib.redirect_stdout(stdout):
-                        code = terminal_launcher.main()
+            with mock.patch.object(terminal_launcher.shutil, "which", return_value=None):
+                with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                    with mock.patch.object(sys, "argv", argv):
+                        with contextlib.redirect_stdout(stdout):
+                            code = terminal_launcher.main()
         self.assertEqual(code, 0)
         self.assertIn("cmd.exe", stdout.getvalue())
+        popen.assert_not_called()
+
+    def test_detect_mode_reports_pwsh_when_present(self) -> None:
+        argv = ["launch_visible_terminal.py", "--detect"]
+        stdout = io.StringIO()
+
+        def which(name: str) -> str | None:
+            return "C:/tools/pwsh.exe" if name == "pwsh" else None
+
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher.shutil, "which", side_effect=which):
+                with mock.patch.object(terminal_launcher.subprocess, "Popen") as popen:
+                    with mock.patch.object(sys, "argv", argv):
+                        with contextlib.redirect_stdout(stdout):
+                            code = terminal_launcher.main()
+        self.assertEqual(code, 0)
+        self.assertIn("pwsh", stdout.getvalue())
         popen.assert_not_called()
 
     def test_detect_mode_never_requires_a_command(self) -> None:
@@ -708,6 +1091,101 @@ class VisibleTerminalLauncherTests(unittest.TestCase):
                     result = terminal_launcher.detect(system)
                     self.assertIsNotNone(result, f"expected a mechanism to be found for {system}")
 
+    def test_terminate_returns_true_immediately_if_already_exited(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = 0
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            result = terminal_launcher.terminate_process_tree(process)
+        self.assertTrue(result)
+        process.send_signal.assert_not_called()
+
+    def test_terminate_windows_sends_ctrl_break_and_waits(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.wait.return_value = 0
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            result = terminal_launcher.terminate_process_tree(process, grace_seconds=5.0)
+        self.assertTrue(result)
+        process.send_signal.assert_called_once_with(terminal_launcher._CTRL_BREAK_EVENT)
+        process.wait.assert_called_once_with(timeout=5.0)
+
+    def test_terminate_windows_escalates_to_taskkill_when_graceful_signal_ignored(self) -> None:
+        # Verified live: a real spawned pwsh console did not respond to
+        # CTRL_BREAK_EVENT within the grace period. taskkill /T /F is the
+        # fallback - a Windows builtin, not a third-party dependency, and
+        # the only way to guarantee the whole tree (not just the direct
+        # child) actually stops.
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.pid = 4242
+        process.wait.side_effect = [
+            terminal_launcher.subprocess.TimeoutExpired(cmd="x", timeout=5.0),
+            0,
+        ]
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher.subprocess, "run") as run:
+                result = terminal_launcher.terminate_process_tree(process)
+        self.assertTrue(result)
+        run.assert_called_once_with(
+            ["taskkill", "/T", "/F", "/PID", "4242"], capture_output=True, check=False
+        )
+
+    def test_terminate_windows_reports_false_when_still_alive_after_taskkill(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.pid = 4242
+        process.wait.side_effect = terminal_launcher.subprocess.TimeoutExpired(cmd="x", timeout=5.0)
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Windows"):
+            with mock.patch.object(terminal_launcher.subprocess, "run") as run:
+                result = terminal_launcher.terminate_process_tree(process)
+        self.assertFalse(result)
+        run.assert_called_once()
+
+    def test_terminate_linux_kills_process_group(self) -> None:
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.pid = 4321
+        process.wait.return_value = 0
+        # os.getpgid/os.killpg are POSIX-only and do not exist in the os
+        # module at all on Windows (where this suite also runs); create=True
+        # lets the mock stand in regardless of the host platform.
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Linux"):
+            with mock.patch.object(terminal_launcher.os, "getpgid", return_value=4321, create=True) as getpgid:
+                with mock.patch.object(terminal_launcher.os, "killpg", create=True) as killpg:
+                    result = terminal_launcher.terminate_process_tree(process)
+        self.assertTrue(result)
+        getpgid.assert_called_once_with(4321)
+        killpg.assert_called_once_with(4321, terminal_launcher.signal.SIGTERM)
+
+    def test_terminate_linux_escalates_to_sigkill_when_sigterm_ignored(self) -> None:
+        # Unlike SIGTERM, SIGKILL cannot be caught or ignored, so this
+        # escalation stays pure Python (no taskkill-equivalent shellout
+        # needed on POSIX).
+        process = mock.Mock()
+        process.poll.return_value = None
+        process.pid = 4321
+        process.wait.side_effect = [
+            terminal_launcher.subprocess.TimeoutExpired(cmd="x", timeout=5.0),
+            0,
+        ]
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Linux"):
+            with mock.patch.object(terminal_launcher.os, "getpgid", return_value=4321, create=True):
+                with mock.patch.object(terminal_launcher.os, "killpg", create=True) as killpg:
+                    result = terminal_launcher.terminate_process_tree(process)
+        self.assertTrue(result)
+        killpg.assert_any_call(4321, terminal_launcher.signal.SIGTERM)
+        killpg.assert_any_call(4321, terminal_launcher._SIGKILL)
+
+    def test_terminate_darwin_not_supported(self) -> None:
+        # launch_macos() returns osascript's own process, not the actual
+        # spawned command's - there is nothing to target yet.
+        process = mock.Mock()
+        process.poll.return_value = None
+        with mock.patch.object(terminal_launcher.platform, "system", return_value="Darwin"):
+            result = terminal_launcher.terminate_process_tree(process)
+        self.assertFalse(result)
+        process.send_signal.assert_not_called()
+
 
 class PrerequisiteTests(unittest.TestCase):
     def test_preflight_only_reports_command_readiness(self) -> None:
@@ -723,6 +1201,29 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertEqual(set(result["required"]), {"python>=3.11", "git", "uv", "git-worktree"})
         self.assertEqual(set(result["optional"]), {"fnm", "node", "corepack", "pnpm", "openwiki", "markitdown"})
         self.assertEqual(set(result["writable_paths"]), {"okf/.okf-build", "okf", ".agents/skills"})
+
+    def test_openwiki_version_parses_help_banner_not_a_flag(self) -> None:
+        # The pinned CLI has no --version flag (it prints "Unknown option:
+        # --version" and exits nonzero); check_prereqs must not surface that
+        # error text as if it were a version string.
+        banner = "  ___\n╭──╮\n│ >_ OpenWiki v0.2.0 agent docs for codebases │\n╰──╯\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(check_prereqs.shutil, "which", return_value="/tools/openwiki"):
+                with mock.patch.object(
+                    check_prereqs.subprocess,
+                    "run",
+                    return_value=subprocess.CompletedProcess([], 0, stdout=banner),
+                ):
+                    ok, detail = check_prereqs.openwiki_version(Path(tmp))
+        self.assertTrue(ok)
+        self.assertEqual(detail, "OpenWiki v0.2.0")
+
+    def test_openwiki_version_reports_not_found_when_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(check_prereqs.shutil, "which", return_value=None):
+                ok, detail = check_prereqs.openwiki_version(Path(tmp))
+        self.assertFalse(ok)
+        self.assertEqual(detail, "not found")
 
 
 if __name__ == "__main__":
