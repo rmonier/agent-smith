@@ -3,10 +3,11 @@ type: Policy
 title: Security, consent, and data flow in agent-smith
 description: Consent-first tooling bootstrap, supply-chain pinning discipline,
   secret hygiene, and data-flow disclosure boundaries.
-timestamp: 2026-07-16T07:21:44.902Z
+timestamp: 2026-07-19T10:16:44.163Z
 sources:
   - AGENTS.md
   - README.md
+  - .agents/skills/agent-ready-context/SKILL.md
   - .agents/skills/agent-ready-context/references/dependencies.md
   - .agents/skills/agent-ready-context/references/privacy-and-data-flows.md
   - .agents/skills/agent-ready-context/references/openwiki-providers.md
@@ -47,11 +48,10 @@ The agent-smith stack is designed so users keep full control over tooling, depen
 
 ### OpenWiki (separate consent and pin)
 
-- External runtime dependency, pinned at immutable commit `74f2f85305f396eb096fd7008522501f13ba8970`
+- External runtime dependency, pinned as npm package `openwiki` `0.2.0`
 - Installed globally at user scope after dependency approval
-- Verified byte-for-byte checkout under ignored `okf/.openwiki/vendor/openwiki/`
-- Corepack-provided pnpm via upstream's `packageManager` field
-- Built, tested, and linked with non-admin user-global source
+- Integrity is recorded in `AGENTS.md` from the configured npm registry; a mismatch for the same pin and source is a stop-and-report event
+- Scripted pnpm installs put `--allow-build=better-sqlite3 --allow-build=esbuild` before the package name so required native builds are not silently skipped
 - Approval is separate from provider/LLM approval
 
 ## Consent workflow
@@ -64,14 +64,14 @@ When a tool is missing:
 4. **User choice** — ask: "May I run it, or will you run it yourself?"
 5. **Record** — if approved, record version + hash + source + date in `AGENTS.md` toolchain table
 
-On all future runs: check recorded pin. Mismatch = stop and report (supply-chain red flag).
+On all future runs: check the recorded package pin and integrity. Mismatch = stop and report (supply-chain red flag); never substitute a vendored checkout or commit pin for the recorded package release.
 
 ## Provider disclosure (LLM/semantic work)
 
 Before running OpenWiki with a provider:
 
 **Disclose:**
-- **Tool**: OpenWiki version/commit, integrity hash, build verification method
+- **Tool**: OpenWiki package version, integrity hash, build verification method
 - **Provider**: vendor name (Anthropic/OpenAI/Google/etc.)
 - **Model**: exact model identifier (Claude 3.5 Sonnet/GPT-4/etc.)
 - **Endpoint family**: API region, federated vs. cloud, on-prem vs. SaaS
@@ -175,7 +175,7 @@ Toolchain pin record in `AGENTS.md`:
 |------|---|---|---|---|
 | uv | 0.x.y | sha256:... | pypi.org registry | 2026-01-15 |
 | fnm | x.y.z | sha256:... | github.com/Schniz/fnm | 2026-01-15 |
-| OpenWiki | commit abc123 | sha256:... | github.com/langchain-ai/openwiki | 2026-07-15 |
+| OpenWiki | npm package `openwiki` `0.2.0` | tarball `sha512:hLop7FDz4zwj7z5VCdXhyY0yJxYVOKtVrBZJj1cSkiMN8nbr1ywm9F6gDxP59kWkuaCs39DCU9QpyzxL7grxnw==` | configured npm registry (`github.com/langchain-ai/openwiki`) | 2026-07-17 |
 
 When a pin changes:
 - Show upstream release notes/diff to user
@@ -238,6 +238,7 @@ These are intentionally ignored (never committed) so production can stay clean w
 ## Citations
 
 - `/AGENTS.md` — toolchain pins, operational rules, house standards
+- `/.agents/skills/agent-ready-context/SKILL.md` — current producer bootstrap and consent workflow
 - `/.agents/skills/agent-ready-context/references/dependencies.md` — detailed bootstrap and pinning discipline
 - `/.agents/skills/agent-ready-context/references/privacy-and-data-flows.md` — provider telemetry and data flow findings
 - `/.agents/skills/agent-ready-context/references/openwiki-providers.md` — provider selection and credential management

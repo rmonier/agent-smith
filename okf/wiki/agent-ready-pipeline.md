@@ -4,7 +4,7 @@ title: Agent-Ready Pipeline
 description: The `agent-ready-context` skill walks a repository through a
   deterministic sequence to gain operational orientation, durable context, and
   portable action capabilities.
-timestamp: 2026-07-16T07:21:44.902Z
+timestamp: 2026-07-19T10:16:44.163Z
 ---
 
 # Agent-Ready Pipeline
@@ -111,9 +111,11 @@ Before any LLM-backed OpenWiki run, disclose:
 
 Then obtain explicit consent. Installation consent is separate from egress consent.
 
+For an OAuth-backed provider with no established session, run `scripts/establish_openwiki_session.py` before the staged producer. The helper starts the provider bootstrap in a dedicated visible terminal and disposable empty directory, watches only for stable credential-file existence under ignored `okf/.openwiki/`, and never reads credential values. After the session is established, the normal isolated producer run proceeds non-interactively.
+
 ### 7. Staging and execution (provider work)
 
-**Action**: `scripts/run_openwiki_staged.py --repo . --execute -- <stock-openxml-argv>`
+**Action**: `scripts/run_openwiki_staged.py --repo . --execute -- <stock-openwiki-argv>`
 
 The wrapper:
 - Builds isolated stage under ignored `okf/.okf-build/<run-id>/`
@@ -217,4 +219,6 @@ Never weaken an isolation gate to make a run pass. Report defects and fix, versi
 - `/.agents/skills/agent-ready-context/SKILL.md` — skill metadata and executor instructions
 - `/.agents/skills/agent-ready-context/references/workflow.md` — authoritative end-to-end procedure
 - `/.agents/skills/agent-ready-context/references/openwiki-lifecycle.md` — staging, validation, promotion details
+- `/.agents/skills/agent-ready-context/references/openwiki-providers.md` — provider selection and OAuth session boundary
+- `/.agents/skills/agent-ready-context/scripts/establish_openwiki_session.py` — visible-terminal OAuth bootstrap without credential-value access
 - `/.agents/skills/agent-ready-context/scripts/run_openwiki_staged.py` — isolated wrapper implementation

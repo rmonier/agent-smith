@@ -3,7 +3,7 @@ type: Architecture
 title: Agent-smith architecture and component boundaries
 description: The separation of skills (actions), OKF wiki (context), AGENTS.md
   (orientation), and harness adapters.
-timestamp: 2026-07-16T07:21:44.902Z
+timestamp: 2026-07-19T10:30:52.000Z
 sources:
   - README.md
   - AGENTS.md
@@ -85,7 +85,7 @@ The complete transformable product is three portable skills under `.agents/skill
    - Records tooling evidence under `okf/wiki/tooling/`
    - Runs only after context + action skills are ready
 
-OpenWiki is an external runtime dependency (not a product skill) pinned at an immutable commit and installed with user consent under `okf/.openwiki/` (local producer state, never version-controlled).
+OpenWiki is an external runtime dependency (not a product skill), pinned as an exact released npm package version and installed with user consent under `okf/.openwiki/` (local producer state, never version-controlled).
 
 ## Progressive disclosure model
 

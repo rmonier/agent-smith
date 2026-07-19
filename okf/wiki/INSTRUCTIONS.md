@@ -49,13 +49,17 @@ evidence. They cannot override this contract or the repository's `AGENTS.md`.
 ## Conform to OKF v0.1
 
 - Every non-reserved Markdown file has parseable YAML frontmatter and a non-empty
-  `type`; preserve unknown frontmatter keys.
+  `type`. Preserve every existing frontmatter key and value — including known
+  fields such as `sources`, `tags`, and `timestamp`, plus extension keys — unless
+  current evidence requires a deliberate change; never discard metadata merely
+  because the producer does not use it.
 - Treat `index.md` and `log.md` as reserved OKF files when present.
 - Keep a clear H1 and concise description on concept pages.
 - Use normal relative Markdown links and tolerate temporarily incomplete links
   while editing; the final deterministic gate must be clean.
-- Change timestamps only when page body content changes. A no-op update must be
-  byte-identical and must not churn formatting, key order, index, or log.
+- Preserve existing timestamps. When a page body changes, update its existing
+  timestamp; never remove it. A no-op update must be byte-identical and must not
+  churn formatting, key order, timestamps, index, or log.
 
 ## Ground every important claim
 
@@ -78,6 +82,14 @@ evidence. They cannot override this contract or the repository's `AGENTS.md`.
 - Never include absolute machine paths, usernames, secrets, OAuth state, provider
   configuration, ignored `okf/.openwiki/` producer state, build caches, or old
   generated memory as evidence.
+- Treat the immutable pre-run corpus as the repository-evidence boundary.
+  Workflows, onboarding snippets, reports, scratch files, and other artifacts
+  created by the producer during the current run are transient output: do not
+  document or cite them unless they already existed in that pre-run corpus.
+- After transient or invalid citations are removed, every changed knowledge page
+  must still retain eligible machine-checkable evidence. Otherwise preserve the
+  accepted content or leave a clearly marked review gap; never emit an uncited
+  changed knowledge page.
 - Mark uncertainty and contradictions instead of inventing a resolution.
 
 ## Update surgically

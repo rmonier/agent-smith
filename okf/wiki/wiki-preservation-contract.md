@@ -3,9 +3,12 @@ type: Policy
 title: OKF wiki preservation and maintenance contract
 description: Rules that every wiki update must preserve; the binding agreement
   between automated producers and manual editors.
-timestamp: 2026-07-16T07:21:44.902Z
+timestamp: 2026-07-19T10:16:44.163Z
 sources:
   - /openwiki/INSTRUCTIONS.md
+  - .agents/skills/agent-ready-context/scripts/run_openwiki_staged.py
+  - .agents/skills/agent-ready-context/references/openwiki-lifecycle.md
+  - tests/test_openwiki_adapter.py
 ---
 
 # Wiki Preservation Contract
@@ -17,7 +20,7 @@ This is the binding agreement between automated memory producers (OpenWiki) and 
 1. **Manual prose and caveats** — reviewed explanations, disclaimers, uncertainty markers survive across unrelated updates
 2. **Formatting and structure** — intentional layout, lists, tables, emphasis remain unchanged
 3. **Unknown metadata** — frontmatter keys beyond the standard schema are preserved
-4. **Timestamp discipline** — modification timestamps change only when body content changes; no-op updates are byte-identical
+4. **Timestamp discipline** — an existing timestamp advances when body content changes and never changes independently; no-op updates are byte-identical
 5. **Architecture integrity** — no subdirectory index.md; single root index.md routes to every page
 
 ## The producer's preservation obligations
@@ -57,7 +60,7 @@ sources: ["<staged-relative-path>", ...]
 
 **Reserved files** (exempt from frontmatter/citations):
 - `index.md` — bundle root, automatically managed
-- `log.md` — OpenWiki run history, never hand-edited
+- `log.md` — OpenWiki run history, never hand-edited; the adapter may add deterministic frontmatter only in the isolated stage for producer compatibility, then strips it before candidate validation and promotion
 
 **All other files** are knowledge pages and need frontmatter + citations.
 
@@ -108,6 +111,7 @@ Never commit to `okf/wiki/`:
 **Single root index.md**
 - Must route to every page (directly or transitively)
 - Never create subdirectory index.md files
+- When the mapped page set is unchanged, the adapter restores the accepted root index byte-for-byte instead of accepting producer regeneration churn
 
 **Quickstart**
 - Keeps compact onboarding route
@@ -133,9 +137,10 @@ When updating the wiki in response to source changes:
 
 ## Timestamp discipline
 
-- **Change body content** → update frontmatter timestamp to current time
-- **No-op edits** (format fix, link check, unknown key preservation) → output is byte-identical to input, timestamp unchanged
-- **Deterministic gate** — timestamp drift is a red flag; re-audit before promoting
+- **Change body content** → advance an existing frontmatter timestamp to current time; never remove it
+- **Unchanged body** → timestamp must remain unchanged, even when other metadata is reviewed
+- **No-op edits** (format fix, link check, unknown key preservation) → output is byte-identical to input
+- **Deterministic gate** — candidate mapping normalizes generated Markdown to LF, rejects a changed body with a missing, stale, or non-advancing existing timestamp, and rejects timestamp churn when the body is unchanged
 
 ## Contradiction resolution
 
@@ -170,6 +175,7 @@ Before promoting any update:
    - Frontmatter valid on all pages
    - Citations resolve to pre-run stage paths
    - No secrets, usernames, absolute paths
+   - Generated Markdown uses LF and page timestamps follow body changes
    
 2. **Semantic review**: Read all changed pages
    - Check claims against source evidence
@@ -185,4 +191,7 @@ Never weaken a quality gate to make a run pass.
 
 - `/openwiki/INSTRUCTIONS.md` — full scope contract (byte-for-byte source)
 - `/.agents/skills/agent-ready-context/references/workflow.md` — automation lifecycle and review gates
+- `/.agents/skills/agent-ready-context/references/openwiki-lifecycle.md` — reserved-file and index-preservation adapter behavior
+- `/.agents/skills/agent-ready-context/scripts/run_openwiki_staged.py` — LF normalization and timestamp enforcement
+- `/tests/test_openwiki_adapter.py` — regression coverage for preservation gates
 - `/.agents/skills/agent-ready-context/scripts/validate_openwiki_bundle.py` — citation validation implementation
